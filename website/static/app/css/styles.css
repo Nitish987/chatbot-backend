@@ -16,7 +16,14 @@
     margin-block: 100px;
 }
 
+/* media queries */
 @media screen and (max-width: 1000px) {
+    /* footer */
+    .footer-space {
+        display: none;
+    }
+
+    /* home */
     .hero-desktop-img {
         margin-top: 50px;
     }
@@ -27,6 +34,7 @@
 }
 
 @media screen and (max-width: 500px) {
+    /* home */
     .hero-desktop-img {
         margin-top: 0px;
     }
