@@ -1,0 +1,55 @@
+{% include "../../base/header.html" %} {% include "../../base/navbar.html" %} {% load static %}
+
+<div class="container mt-3 bg-primary-light rounded-5 position-relative p-0">
+    <div class="hero-text">
+        <h1 class="text-center">Integrate with ease</h1>
+        <h6 class="text-center">Conceptune provides easy integration.</h6>
+        <h6 class="text-center">Launch quickly to boost customer engagement.</h6>
+    </div>
+    <img class="hero-desktop-img rounded-5" src="{% static "res/images/hero_desktop.png" %}" alt="hero_desktop">
+</div>
+
+<div class="container hero-block">
+    <div class="row">
+        <div class="col d-flex flex-column justify-content-center">
+            <h1>Chatbots</h1>
+            <h3>Engage and retain your customers</h3>
+            <p>Integrate chatbots on your website in few clicks. We provide chatbots powered with ChatGPT and other GPT models too.</p>
+            <div class="d-flex gap-3">
+                <a class="link-dark link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="/docs">View Docs</a>
+                <a class="link-dark link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="/pricing">View Pricing</a>
+            </div>
+        </div>
+        <div class="col hero-chatbot-img-holder">
+            <img class="img-fluid p-5" src="{% static "res/images/hero_chatbot.png" %}" alt="hero_chatbot">
+        </div>
+    </div>
+</div>
+
+<div class="container hero-block">
+    <div class="row">
+        <div class="col hero-forms-img-holder">
+            <img class="img-fluid p-5" src="{% static "res/images/hero_forms.png" %}" alt="hero_forms">
+        </div>
+        <div class="col d-flex flex-column justify-content-center">
+            <h1>Embedded Forms</h1>
+            <h3>Create Forms without backend</h3>
+            <p>Integrate forms on your website in just few clicks. We provide customizable forms according to your needs.</p>
+            <div class="d-flex gap-3">
+                <a class="link-dark link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="/docs">View Docs</a>
+                <a class="link-dark link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="/pricing">View Pricing</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5 bg-primary rounded-5 py-5">
+    <h1 class="text-center text-white">Products & API's</h1>
+    <div class="d-flex justify-content-center gap-4 mt-4">
+        <a class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="/chatbots">Chatbots</a>
+        <a class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="/emforms">Embedded Forms</a>
+        <a class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="/docs">Docs</a>
+    </div>
+</div>
+
+{% include "../../base/footer.html" %}

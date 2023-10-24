@@ -1,0 +1,28 @@
+# virtualenv
+venv/
+
+# backups
+backups/
+
+# environment varialbes
+.env
+
+# django cache and migrations
+__pycache__/
+migrations/
+
+# django media
+media/
+
+# react build
+build/
+
+# static files
+static_files/
+
+# google cloud credentials
+gcloud_credentials.json
+firebase_credentials.json
+
+# sqlite database
+db.sqlite3
