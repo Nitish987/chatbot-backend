@@ -6,6 +6,8 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+APP_NAME = getenv('APP_NAME')
+
 SECRET_KEY = getenv('SECRET_KEY')
 
 DEBUG = True
@@ -22,8 +24,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'app.index',
-    'app.account'
+    'app.account',
 ]
 
 MIDDLEWARE = [
@@ -56,6 +59,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'server.wsgi.application'
 
+# User Model
+
+AUTH_USER_MODEL = 'account.User'
 
 # Database
 
@@ -90,6 +96,58 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# Rest API Framework Configurations
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'app.account.auth.UserAuthentication',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'signup': '10/min',
+        'signup_verification': '100/min',
+        'resent_signup_otp': '10/min',
+        'login': '10/min',
+        'password_recovery': '10/min',
+        'password_recovery_verification': '100/min',
+        'password_recovery_new_password': '10/min',
+        'resent_password_recovery_otp': '10/min',
+        'authenticated_user': '1000/hour',
+        'change_names': '3/day',
+        'logout': '10/min',
+    },
+    'EXCEPTION_HANDLER': 'utils.exceptions.ExceptionHandler'
+}
+
+# Jwt Config
+
+JWT_SECRET = getenv('JWT_SECRET')
+
+# Softauth api key
+
+APP_API_KEY = getenv('APP_API_KEY')
+
+# Account Creation Key
+
+ACCOUNT_CREATION_KEY = getenv('ACCOUNT_CREATION_KEY')
+
+# Encryption Key
+
+SERVER_ENC_KEY = getenv('SERVER_ENC_KEY')
+
+# Token expire time
+
+SIGNUP_EXPIRE_SECONDS = 10 * 60 # 10 minute
+PASSWORD_RECOVERY_EXPIRE_SECONDS = 10 * 60 # 10 minute
+ONE_DAY_EXPIRE_SECONDS = 1 * 24 * 60 * 60 # 1 day
+OTP_EXPIRE_SECONDS = 3 * 60 # 3 minute
+RESENT_OTP_EXPIRE_SECONDS = 5 * 60 # 5 minute
+PASSWORD_EXPIRE_SECONDS = 5 * 60 # 5 minute
+AUTH_EXPIRE_SECONDS = 30 * 24 * 60 * 60 # 30 days
+
 
 
 # Internationalization
