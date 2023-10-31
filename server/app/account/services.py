@@ -4,6 +4,7 @@ from django.core.cache import cache
 from utils import otp, generator, security
 from utils.platform import Platform
 from utils.messenger import Mailer
+from utils.log import Log
 from .jwt_token import Jwt
 from .models import User, LoginState
 from .exceptions import UserNotFoundError, NoCacheDataError
@@ -23,7 +24,6 @@ class UserService:
             first_name=data.get('first_name'),
             last_name=data.get('last_name'),
             gender=data.get('gender'),
-            date_of_birth=data.get('date_of_birth'),
             msg_token=data.get('msg_token'),
             email=data.get('email'),
             password=data.get('password'),
@@ -159,13 +159,11 @@ class SignupService:
         if platform == Platform.MOBILE:
             _sot = request.META.get('HTTP_SOT')
             _srt = request.META.get('HTTP_SRT')
-            success_o, payload_o = Jwt.validate(_sot)
-            success_r, payload_r = Jwt.validate(_srt)
         else:
             _sot = request.COOKIES.get('sot')
             _srt = request.COOKIES.get('srt')
-            success_o, payload_o = Jwt.validate(_sot)
-            success_r, payload_r = Jwt.validate(_srt)
+        success_o, payload_o = Jwt.validate(_sot)
+        success_r, payload_r = Jwt.validate(_srt)
             
         # validating token
         is_verified = success_o and payload_o.get('type') == 'SO' and success_r and payload_r.get('type') == 'SR' and payload_o['data']['id'] == payload_r['data']['id']
@@ -269,13 +267,13 @@ class LoginService:
         login_token = login_state.token
 
         # creating logged in authenticatin token
-        auth_token = Jwt.generate(type='LI', data={'uid': user.uid}, seconds=settings.AUTH_EXPIRE_SECONDS)
+        auth_token = Jwt.generate(type='LI', data={'uid': user.uuid}, seconds=settings.AUTH_EXPIRE_SECONDS)
 
         # getting user encryption key
         enc_key = UserService.get_user_enc_key(user)
 
         return { 
-            'uid': user.uid,
+            'uid': user.uuid,
             'at': auth_token,
             'lst': login_token,
             'enc_key': enc_key,

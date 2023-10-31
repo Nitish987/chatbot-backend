@@ -8,7 +8,7 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('acc_type', 'is_active', 'is_signed', 'is_verified', 'is_admin',)
     fieldsets = (
         ('User', {'fields': ('first_name', 'last_name', 'email', 'country_code', 'phone', 'username', 'password')}),
-        ('Profile', {'fields': ('gender', 'date_of_birth', 'photo')}),
+        ('Profile', {'fields': ('gender', 'photo')}),
         ('Account Type', {'fields': ('acc_type',)}),
         ('Account State', {'fields': ('is_signed', 'is_active', 'is_verified')}),
         ('Encryption Keys', {'fields': ('enc_key',)}),

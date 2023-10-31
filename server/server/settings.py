@@ -1,6 +1,7 @@
 from pathlib import Path
 from dotenv import load_dotenv
 from os import getenv
+from corsheaders.defaults import default_headers
 
 load_dotenv()
 
@@ -25,6 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',
     'app.index',
     'app.account',
 ]
@@ -32,6 +34,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -67,17 +70,24 @@ AUTH_USER_MODEL = 'account.User'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': getenv('DATABASE_NAME'),
-        'USER': getenv('DATABASE_USER'),
-        'PASSWORD': getenv('DATABASE_PASSWORD'),
-        'HOST': getenv('DATABASE_HOST'),
-        'PORT': getenv('DATABASE_PORT'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-        },
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': getenv('DATABASE_NAME'),
+#         'USER': getenv('DATABASE_USER'),
+#         'PASSWORD': getenv('DATABASE_PASSWORD'),
+#         'HOST': getenv('DATABASE_HOST'),
+#         'PORT': getenv('DATABASE_PORT'),
+#         'OPTIONS': {
+#             'charset': 'utf8mb4',
+#         },
+#     }
+# }
 
 
 # Password validation
@@ -104,7 +114,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'app.account.auth.UserAuthentication',
+        'app.account.auth.WebUserAuthentication',
     ),
     'DEFAULT_THROTTLE_RATES': {
         'signup': '10/min',
@@ -148,7 +158,11 @@ RESENT_OTP_EXPIRE_SECONDS = 5 * 60 # 5 minute
 PASSWORD_EXPIRE_SECONDS = 5 * 60 # 5 minute
 AUTH_EXPIRE_SECONDS = 30 * 24 * 60 * 60 # 30 days
 
+# Cors Configuration
 
+CORS_ALLOWED_ORIGINS = [getenv('CLIENT_ORIGIN')]
+CORS_ALLOW_HEADERS = (*default_headers, 'AAK', 'ACK', 'LST', 'UID')
+CORS_ALLOW_CREDENTIALS = True
 
 # Internationalization
 

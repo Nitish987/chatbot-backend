@@ -7,7 +7,7 @@ class IsRequestValid(permissions.BasePermission):
     message = 'Something went wrong! Please try again.'
 
     def has_permission(self, request, view):
-        key = request.META.get('HTTP_SEAK')
+        key = request.META.get('HTTP_AAK')
         if key == settings.APP_API_KEY:
             return True
         return False

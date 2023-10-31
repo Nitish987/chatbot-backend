@@ -25,7 +25,7 @@ class UserManager(BaseUserManager):
 
         return user
     
-    def create_user_with_profile(self, first_name, last_name, gender, date_of_birth, msg_token, email, password=None):
+    def create_user_with_profile(self, first_name, last_name, gender, msg_token, email, password=None):
         first_name = first_name.lower()
         last_name = last_name.lower()
 
@@ -33,7 +33,6 @@ class UserManager(BaseUserManager):
 
         # creating profile 
         user.gender = gender
-        user.date_of_birth = date_of_birth
 
         # preparing user encryption key
         enc_key = generator.generate_password_key()
@@ -82,7 +81,6 @@ class User(AbstractBaseUser):
     phone = models.CharField(default='', max_length=20, blank=True)
     username = models.CharField(default='', max_length=255, unique=True)
     gender = models.CharField(default='M', choices=(('M', 'Male'), ('F', 'Female'), ('O', 'Others')), max_length=1)
-    date_of_birth = models.CharField(default='', max_length=10, blank=True)
     photo = models.ImageField(upload_to='profile/photo', blank=True)
     acc_type = models.CharField(default='NORMAL', choices=(('NORMAL', 'Normal'), ('PREMIUM', 'Premium')), max_length=20)
     is_signed = models.BooleanField(default=False)
@@ -113,6 +111,10 @@ class User(AbstractBaseUser):
     def is_staff(self):
         return self.is_admin
     
+    @property
+    def uuid(self) -> str:
+        return str(self.uid)
+
     @property
     def full_name(self) -> str:
         return string.capwords(f'{self.first_name} {self.last_name}')

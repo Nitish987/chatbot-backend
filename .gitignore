@@ -26,3 +26,6 @@ firebase_credentials.json
 
 # sqlite database
 db.sqlite3
+
+# changes
+changes.txt

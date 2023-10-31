@@ -7,11 +7,11 @@ from .jwt_token import Jwt
 
 
 # User Authentication
-class UserAuthentication(authentication.BaseAuthentication):
+class WebUserAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         try:
             # getting validation success and payload from authentication token
-            success, payload = Jwt.validate(request.META.get('HTTP_AUTHORIZATION'))
+            success, payload = Jwt.validate(request.COOKIES.get('HTTP_AUTHORIZATION'))
             payload_data = payload['data']
         
             # validating authentication token

@@ -27,13 +27,14 @@ class Signup(APIView):
                 
                 # sending response
                 response = Response.success({ 'message': content['message']})
-                response.set_cookie('sot', content['sot'], httponly=True, expires=settings.OTP_EXPIRE_SECONDS)
-                response.set_cookie('srt', content['srt'], httponly=True, expires=settings.SIGNUP_EXPIRE_SECONDS)
+                response.set_cookie('sot', content['sot'], httponly=True, expires=settings.OTP_EXPIRE_SECONDS, samesite='None', secure=True)
+                response.set_cookie('srt', content['srt'], httponly=True, expires=settings.SIGNUP_EXPIRE_SECONDS, samesite='None',secure=True)
                 return response
 
             # sending error response
             return Response.errors(serializer.errors)
-        except:
+        except Exception as e:
+            Log.error(e)
             return Response.something_went_wrong()
 
 
@@ -67,18 +68,30 @@ class SignupVerification(APIView):
                     user = SignupService.create_user(data)
 
                     # generating auth tokens
-                    response = LoginService.generate_auth_token(user, request, platform=Platform.WEB)
+                    content = LoginService.generate_auth_token(user, request)
 
                     # sending response
-                    return Response.success(response)
+                    response = Response.success({ 'uid': content['uid'], 'enc_key': content['enc_key']})
+                    response.delete_cookie('sot')
+                    response.delete_cookie('srt')
+                    response.set_cookie('at', content['at'], httponly=True, expires=settings.AUTH_EXPIRE_SECONDS, samesite='None', secure=True)
+                    response.set_cookie('lst', content['lst'], expires=settings.AUTH_EXPIRE_SECONDS, samesite='None', secure=True)
+                    return response
 
                 # sending error response
                 return Response.errors(serializer.errors)
             
-            return Response.error('Session out! Try again.')
+            response = Response.error('Session out! Try again.')
+            response.delete_cookie('sot')
+            response.delete_cookie('srt')
+            return response
+        
         except Exception as e:
             Log.error(e)
-            return Response.something_went_wrong()
+            response = Response.something_went_wrong()
+            response.delete_cookie('sot')
+            response.delete_cookie('srt')
+            return response
 
 
 
@@ -96,14 +109,24 @@ class ResentSignupOtp(APIView):
 
             # validating token
             if is_verified:
-                response = SignupService.resent_otp(id, request, platform=Platform.WEB)
+                content = SignupService.resent_otp(id, request, platform=Platform.WEB)
 
                 # sending response
-                return Response.success(response)
+                response = Response.success({ 'message': content['message']})
+                response.set_cookie('sot', content['sot'], httponly=True, expires=settings.OTP_EXPIRE_SECONDS, samesite='None', secure=True)
+                response.set_cookie('srt', content['srt'], httponly=True, expires=settings.SIGNUP_EXPIRE_SECONDS, samesite='None', secure=True)
+                return response
             
-            return Response.error('Session out! Try again.')
+            response = Response.error('Session out! Try again.')
+            response.delete_cookie('sot')
+            response.delete_cookie('srt')
+            return response
+        
         except:
-            return Response.something_went_wrong()
+            response = Response.something_went_wrong()
+            response.delete_cookie('sot')
+            response.delete_cookie('srt')
+            return response
 
 
 
@@ -125,10 +148,13 @@ class Login(APIView):
 
                 if user is not None:
                     # generating auth tokens
-                    response = LoginService.generate_auth_token(user, request, platform=Platform.WEB)
+                    content = LoginService.generate_auth_token(user, request)
 
                     # sending response
-                    return Response.success(response)
+                    response = Response.success({ 'uid': content['uid'], 'enc_key': content['enc_key']})
+                    response.set_cookie('at', content['at'], httponly=True, expires=settings.AUTH_EXPIRE_SECONDS, samesite='None', secure=True)
+                    response.set_cookie('lst', content['lst'], expires=settings.AUTH_EXPIRE_SECONDS, samesite='None', secure=True)
+                    return response
 
                 # sending invalid credentials error response
                 return Response.error('Invalid Credentials.')
@@ -153,10 +179,13 @@ class PasswordRecovery(APIView):
             serializer = serializers.PasswordRecoverySerializer(data=request.data)
 
             if serializer.is_valid():
-                response = PasswordRecoveryService.recover_password(serializer.user, serializer.data, platform=Platform.WEB)
+                content = PasswordRecoveryService.recover_password(serializer.user, serializer.data)
 
                 # sending response
-                return Response.success(response)
+                response = Response.success({ 'message': content['message']})
+                response.set_cookie('prot', content['prot'], httponly=True, expires=settings.OTP_EXPIRE_SECONDS, samesite='None')
+                response.set_cookie('prrt', content['prrt'], httponly=True, expires=settings.PASSWORD_RECOVERY_EXPIRE_SECONDS, samesite='None')
+                return response
 
             # sending error response
             return Response.errors(serializer.errors)
@@ -188,17 +217,27 @@ class PasswordRecoveryVerification(APIView):
                     PasswordRecoveryService.delete_recovery_cache_data(uid)
                     del data['otp']
 
-                    response = PasswordRecoveryService.generate_new_pass_token(uid, platform=Platform.WEB)
+                    content = PasswordRecoveryService.generate_new_pass_token(uid)
 
                     # sending response
-                    return Response.success(response)
+                    response = Response.success({ 'message': content['message']})
+                    response.delete_cookie('prot')
+                    response.delete_cookie('prrt')
+                    response.set_cookie('prnpt', content['prnpt'], httponly=True, expires=settings.PASSWORD_EXPIRE_SECONDS, samesite='None')
+                    return response
 
                 # sending error response
                 return Response.errors(serializer.errors)
             
-            return Response.error('Session out! Try again.')
+            response = Response.error('Session out! Try again.')
+            response.delete_cookie('prot')
+            response.delete_cookie('prrt')
+            return response
         except:
-            return Response.something_went_wrong()
+            response = Response.something_went_wrong()
+            response.delete_cookie('prot')
+            response.delete_cookie('prrt')
+            return response
 
 
 
@@ -227,16 +266,20 @@ class PasswordRecoveryNewPassword(APIView):
                     UserService.change_password(user, serializer.validated_data.get('password'))
 
                     # sending response
-                    return Response.success({ 
-                        'message': 'Password changed successfully.'
-                    })
+                    response = Response.success({'message': 'Password changed successfully.'})
+                    response.delete_cookie('prnpt')
+                    return response
 
                 # sending error response
                 return Response.errors(serializer.errors)
             
-            return Response.error('Session out! Try again.') 
+            response = Response.error('Session out! Try again.') 
+            response.delete_cookie('prnpt')
+            return response
         except:
-           return Response.something_went_wrong()
+            response = Response.something_went_wrong()
+            response.delete_cookie('prnpt')
+            return response
 
 
 
@@ -254,14 +297,23 @@ class ResentPasswordRecoveryOtp(APIView):
 
             # validating token
             if is_verified:
-                response = PasswordRecoveryService.resent_otp(uid, request, platform=Platform.WEB)
+                content = PasswordRecoveryService.resent_otp(uid, request, platform=Platform.WEB)
 
                 # sending response
-                return Response.success(response)
+                response = Response.success({ 'message': content['message']})
+                response.set_cookie('prot', content['prot'], httponly=True, expires=settings.OTP_EXPIRE_SECONDS, samesite='None')
+                response.set_cookie('prrt', content['prrt'], httponly=True, expires=settings.PASSWORD_RECOVERY_EXPIRE_SECONDS, samesite='None')
+                return response
             
-            return Response.error('Session out! Try again.')
+            response = Response.error('Session out! Try again.')
+            response.delete_cookie('prot')
+            response.delete_cookie('prrt')
+            return response
         except:
-            return Response.something_went_wrong()
+            response = Response.something_went_wrong()
+            response.delete_cookie('prot')
+            response.delete_cookie('prrt')
+            return response
 
 
 

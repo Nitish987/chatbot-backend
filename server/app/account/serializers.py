@@ -7,18 +7,16 @@ from django.core.cache import cache
 # Signup
 class SignupSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255)
-    date_of_birth = serializers.CharField(max_length=10)
     gender = serializers.CharField(max_length=1)
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'gender', 'date_of_birth', 'email', 'password', 'msg_token']
+        fields = ['first_name', 'last_name', 'gender', 'email', 'password', 'msg_token']
 
     def validate(self, attrs):
         first_name = attrs.get('first_name')
         last_name = attrs.get('last_name')
         gender = attrs.get('gender')
-        date_of_birth = attrs.get('date_of_birth')
         email = attrs.get('email')
         password = attrs.get('password')
         msg_token = attrs.get('msg_token')
@@ -32,9 +30,6 @@ class SignupSerializer(serializers.ModelSerializer):
 
         if validators.is_empty(gender) or not validators.atleast_length(gender, 1):
             raise serializers.ValidationError({'gender': 'Gender Must be specified.'})
-
-        if validators.is_empty(date_of_birth) or not validators.is_equal_length(date_of_birth, 10):
-            raise serializers.ValidationError({'date_of_birth': 'Invalid Date of Birth.'})
 
         if not validators.is_email(email):
             raise serializers.ValidationError({'email': 'Invalid Email'})
