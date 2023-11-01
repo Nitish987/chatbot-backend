@@ -8,7 +8,7 @@ from .throttling import SignupThrottling, SignupVerificationThrottling, ResentSi
 from utils.response import Response
 from utils.log import Log
 from utils.platform import Platform
-from django.conf import settings
+from constants.tokens import TokenExpiry, CookieToken
 
 
 
@@ -27,8 +27,22 @@ class Signup(APIView):
                 
                 # sending response
                 response = Response.success({ 'message': content['message']})
-                response.set_cookie('sot', content['sot'], httponly=True, expires=settings.OTP_EXPIRE_SECONDS, samesite='None', secure=True)
-                response.set_cookie('srt', content['srt'], httponly=True, expires=settings.SIGNUP_EXPIRE_SECONDS, samesite='None',secure=True)
+                response.set_cookie(
+                    CookieToken.SIGNUP_OTP_TOKEN, 
+                    content['sot'], 
+                    httponly=True, 
+                    expires=TokenExpiry.OTP_EXPIRE_SECONDS, 
+                    samesite='None', 
+                    secure=True
+                )
+                response.set_cookie(
+                    CookieToken.SIGNUP_REQUEST_TOKEN, 
+                    content['srt'], 
+                    httponly=True, 
+                    expires=TokenExpiry.SIGNUP_EXPIRE_SECONDS, 
+                    samesite='None',
+                    secure=True
+                )
                 return response
 
             # sending error response
@@ -72,25 +86,38 @@ class SignupVerification(APIView):
 
                     # sending response
                     response = Response.success({ 'uid': content['uid'], 'enc_key': content['enc_key']})
-                    response.delete_cookie('sot')
-                    response.delete_cookie('srt')
-                    response.set_cookie('at', content['at'], httponly=True, expires=settings.AUTH_EXPIRE_SECONDS, samesite='None', secure=True)
-                    response.set_cookie('lst', content['lst'], expires=settings.AUTH_EXPIRE_SECONDS, samesite='None', secure=True)
+                    response.delete_cookie(CookieToken.SIGNUP_OTP_TOKEN)
+                    response.delete_cookie(CookieToken.SIGNUP_REQUEST_TOKEN)
+                    response.set_cookie(
+                        'at', 
+                        content['at'], 
+                        httponly=True, 
+                        expires=TokenExpiry.AUTH_EXPIRE_SECONDS, 
+                        samesite='None', 
+                        secure=True
+                    )
+                    response.set_cookie(
+                        'lst', 
+                        content['lst'], 
+                        expires=TokenExpiry.AUTH_EXPIRE_SECONDS, 
+                        samesite='None', 
+                        secure=True
+                    )
                     return response
 
                 # sending error response
                 return Response.errors(serializer.errors)
             
             response = Response.error('Session out! Try again.')
-            response.delete_cookie('sot')
-            response.delete_cookie('srt')
+            response.delete_cookie(CookieToken.SIGNUP_OTP_TOKEN)
+            response.delete_cookie(CookieToken.SIGNUP_REQUEST_TOKEN)
             return response
         
         except Exception as e:
             Log.error(e)
             response = Response.something_went_wrong()
-            response.delete_cookie('sot')
-            response.delete_cookie('srt')
+            response.delete_cookie(CookieToken.SIGNUP_OTP_TOKEN)
+            response.delete_cookie(CookieToken.SIGNUP_REQUEST_TOKEN)
             return response
 
 
@@ -113,19 +140,33 @@ class ResentSignupOtp(APIView):
 
                 # sending response
                 response = Response.success({ 'message': content['message']})
-                response.set_cookie('sot', content['sot'], httponly=True, expires=settings.OTP_EXPIRE_SECONDS, samesite='None', secure=True)
-                response.set_cookie('srt', content['srt'], httponly=True, expires=settings.SIGNUP_EXPIRE_SECONDS, samesite='None', secure=True)
+                response.set_cookie(
+                    CookieToken.SIGNUP_OTP_TOKEN, 
+                    content['sot'], 
+                    httponly=True, 
+                    expires=TokenExpiry.OTP_EXPIRE_SECONDS, 
+                    samesite='None', 
+                    secure=True
+                )
+                response.set_cookie(
+                    CookieToken.SIGNUP_REQUEST_TOKEN, 
+                    content['srt'], 
+                    httponly=True, 
+                    expires=TokenExpiry.SIGNUP_EXPIRE_SECONDS, 
+                    samesite='None', 
+                    secure=True
+                )
                 return response
             
             response = Response.error('Session out! Try again.')
-            response.delete_cookie('sot')
-            response.delete_cookie('srt')
+            response.delete_cookie(CookieToken.SIGNUP_OTP_TOKEN)
+            response.delete_cookie(CookieToken.SIGNUP_REQUEST_TOKEN)
             return response
         
         except:
             response = Response.something_went_wrong()
-            response.delete_cookie('sot')
-            response.delete_cookie('srt')
+            response.delete_cookie(CookieToken.SIGNUP_OTP_TOKEN)
+            response.delete_cookie(CookieToken.SIGNUP_REQUEST_TOKEN)
             return response
 
 
@@ -152,8 +193,8 @@ class Login(APIView):
 
                     # sending response
                     response = Response.success({ 'uid': content['uid'], 'enc_key': content['enc_key']})
-                    response.set_cookie('at', content['at'], httponly=True, expires=settings.AUTH_EXPIRE_SECONDS, samesite='None', secure=True)
-                    response.set_cookie('lst', content['lst'], expires=settings.AUTH_EXPIRE_SECONDS, samesite='None', secure=True)
+                    response.set_cookie('at', content['at'], httponly=True, expires=TokenExpiry.AUTH_EXPIRE_SECONDS, samesite='None', secure=True)
+                    response.set_cookie('lst', content['lst'], expires=TokenExpiry.AUTH_EXPIRE_SECONDS, samesite='None', secure=True)
                     return response
 
                 # sending invalid credentials error response
@@ -183,8 +224,20 @@ class PasswordRecovery(APIView):
 
                 # sending response
                 response = Response.success({ 'message': content['message']})
-                response.set_cookie('prot', content['prot'], httponly=True, expires=settings.OTP_EXPIRE_SECONDS, samesite='None')
-                response.set_cookie('prrt', content['prrt'], httponly=True, expires=settings.PASSWORD_RECOVERY_EXPIRE_SECONDS, samesite='None')
+                response.set_cookie(
+                    CookieToken.PASSWORD_RECOVERY_OTP_TOKEN, 
+                    content['prot'], 
+                    httponly=True, 
+                    expires=TokenExpiry.OTP_EXPIRE_SECONDS, 
+                    samesite='None'
+                )
+                response.set_cookie(
+                    CookieToken.PASSWORD_RECOVERY_REQUEST_TOKEN, 
+                    content['prrt'], 
+                    httponly=True, 
+                    expires=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS, 
+                    samesite='None'
+                )
                 return response
 
             # sending error response
@@ -221,22 +274,28 @@ class PasswordRecoveryVerification(APIView):
 
                     # sending response
                     response = Response.success({ 'message': content['message']})
-                    response.delete_cookie('prot')
-                    response.delete_cookie('prrt')
-                    response.set_cookie('prnpt', content['prnpt'], httponly=True, expires=settings.PASSWORD_EXPIRE_SECONDS, samesite='None')
+                    response.delete_cookie(CookieToken.PASSWORD_RECOVERY_OTP_TOKEN)
+                    response.delete_cookie(CookieToken.PASSWORD_RECOVERY_REQUEST_TOKEN)
+                    response.set_cookie(
+                        CookieToken.PASSWORD_RECOVERY_NEW_PASS_TOKEN, 
+                        content['prnpt'], 
+                        httponly=True, 
+                        expires=TokenExpiry.PASSWORD_EXPIRE_SECONDS, 
+                        samesite='None'
+                    )
                     return response
 
                 # sending error response
                 return Response.errors(serializer.errors)
             
             response = Response.error('Session out! Try again.')
-            response.delete_cookie('prot')
-            response.delete_cookie('prrt')
+            response.delete_cookie(CookieToken.PASSWORD_RECOVERY_OTP_TOKEN)
+            response.delete_cookie(CookieToken.PASSWORD_RECOVERY_REQUEST_TOKEN)
             return response
         except:
             response = Response.something_went_wrong()
-            response.delete_cookie('prot')
-            response.delete_cookie('prrt')
+            response.delete_cookie(CookieToken.PASSWORD_RECOVERY_OTP_TOKEN)
+            response.delete_cookie(CookieToken.PASSWORD_RECOVERY_REQUEST_TOKEN)
             return response
 
 
@@ -267,18 +326,18 @@ class PasswordRecoveryNewPassword(APIView):
 
                     # sending response
                     response = Response.success({'message': 'Password changed successfully.'})
-                    response.delete_cookie('prnpt')
+                    response.delete_cookie(CookieToken.PASSWORD_RECOVERY_NEW_PASS_TOKEN)
                     return response
 
                 # sending error response
                 return Response.errors(serializer.errors)
             
             response = Response.error('Session out! Try again.') 
-            response.delete_cookie('prnpt')
+            response.delete_cookie(CookieToken.PASSWORD_RECOVERY_NEW_PASS_TOKEN)
             return response
         except:
             response = Response.something_went_wrong()
-            response.delete_cookie('prnpt')
+            response.delete_cookie(CookieToken.PASSWORD_RECOVERY_NEW_PASS_TOKEN)
             return response
 
 
@@ -301,18 +360,30 @@ class ResentPasswordRecoveryOtp(APIView):
 
                 # sending response
                 response = Response.success({ 'message': content['message']})
-                response.set_cookie('prot', content['prot'], httponly=True, expires=settings.OTP_EXPIRE_SECONDS, samesite='None')
-                response.set_cookie('prrt', content['prrt'], httponly=True, expires=settings.PASSWORD_RECOVERY_EXPIRE_SECONDS, samesite='None')
+                response.set_cookie(
+                    CookieToken.PASSWORD_RECOVERY_OTP_TOKEN, 
+                    content['prot'], 
+                    httponly=True, 
+                    expires=TokenExpiry.OTP_EXPIRE_SECONDS, 
+                    samesite='None'
+                )
+                response.set_cookie(
+                    CookieToken.PASSWORD_RECOVERY_REQUEST_TOKEN, 
+                    content['prrt'], 
+                    httponly=True, 
+                    expires=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS, 
+                    samesite='None'
+                )
                 return response
             
             response = Response.error('Session out! Try again.')
-            response.delete_cookie('prot')
-            response.delete_cookie('prrt')
+            response.delete_cookie(CookieToken.PASSWORD_RECOVERY_OTP_TOKEN)
+            response.delete_cookie(CookieToken.PASSWORD_RECOVERY_REQUEST_TOKEN)
             return response
         except:
             response = Response.something_went_wrong()
-            response.delete_cookie('prot')
-            response.delete_cookie('prrt')
+            response.delete_cookie(CookieToken.PASSWORD_RECOVERY_OTP_TOKEN)
+            response.delete_cookie(CookieToken.PASSWORD_RECOVERY_REQUEST_TOKEN)
             return response
 
 

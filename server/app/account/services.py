@@ -11,6 +11,8 @@ from .exceptions import UserNotFoundError, NoCacheDataError
 from django.contrib.auth import authenticate
 from django.utils import timezone
 from datetime import timedelta
+from constants.tokens import TokenExpiry, TokenType, CookieToken, HeaderToken
+from constants.headers import Header
 
 
 
@@ -138,14 +140,14 @@ class SignupService:
         data['otp'] = hashed_otp
 
         # putting data into cache for validation
-        cache.set(f'{id}:signup', data, timeout=settings.SIGNUP_EXPIRE_SECONDS)
+        cache.set(f'{id}:signup', data, timeout=TokenExpiry.SIGNUP_EXPIRE_SECONDS)
 
         # generating signup otp token
-        signup_otp_token = Jwt.generate(type='SO', data={'id': id}, seconds=settings.OTP_EXPIRE_SECONDS)
-        signup_request_token = Jwt.generate(type='SR', data={'id': id}, seconds=settings.SIGNUP_EXPIRE_SECONDS)
+        signup_otp_token = Jwt.generate(type=TokenType.SIGNUP_OTP, data={'id': id}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        signup_request_token = Jwt.generate(type=TokenType.SIGNUP_REQUEST, data={'id': id}, seconds=TokenExpiry.SIGNUP_EXPIRE_SECONDS)
 
         # sending otp mail to user
-        Mailer.sendEmail(email, f'''Your Verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {settings.OTP_EXPIRE_SECONDS} seconds.''')
+        Mailer.sendEmail(email, f'''Your Verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {TokenExpiry.OTP_EXPIRE_SECONDS} seconds.''')
 
         return { 
             'message': f'Enter the otp sent to email {email}',
@@ -157,16 +159,17 @@ class SignupService:
     def verify_signup_verification_tokens(request, platform: str):
         # retriving headers data
         if platform == Platform.MOBILE:
-            _sot = request.META.get('HTTP_SOT')
-            _srt = request.META.get('HTTP_SRT')
+            _sot = request.META.get(HeaderToken.SIGNUP_OTP_TOKEN)
+            _srt = request.META.get(HeaderToken.SIGNUP_REQUEST_TOKEN)
         else:
-            _sot = request.COOKIES.get('sot')
-            _srt = request.COOKIES.get('srt')
+            _sot = request.COOKIES.get(CookieToken.SIGNUP_OTP_TOKEN)
+            _srt = request.COOKIES.get(CookieToken.SIGNUP_REQUEST_TOKEN)
+            
         success_o, payload_o = Jwt.validate(_sot)
         success_r, payload_r = Jwt.validate(_srt)
             
         # validating token
-        is_verified = success_o and payload_o.get('type') == 'SO' and success_r and payload_r.get('type') == 'SR' and payload_o['data']['id'] == payload_r['data']['id']
+        is_verified = success_o and payload_o.get('type') == TokenType.SIGNUP_OTP and success_r and payload_r.get('type') == TokenType.SIGNUP_REQUEST and payload_o['data']['id'] == payload_r['data']['id']
         id = payload_o['data']['id'] if is_verified else None
         return is_verified, id
     
@@ -195,13 +198,14 @@ class SignupService:
     def verify_resent_otp_tokens(request, platform: str):
         # retriving headers data
         if platform == Platform.MOBILE:
-            _srt = request.META.get('HTTP_SRT')
+            _srt = request.META.get(HeaderToken.SIGNUP_REQUEST_TOKEN)
         else:
-            _srt = request.COOKIES.get('srt')
+            _srt = request.COOKIES.get(CookieToken.SIGNUP_REQUEST_TOKEN)
+
         success, payload = Jwt.validate(_srt)
 
         # validating token
-        is_verified = success and payload.get('type') == 'SR'
+        is_verified = success and payload.get('type') == TokenType.SIGNUP_REQUEST
         id = payload['data']['id'] if is_verified else None
 
         return is_verified, id
@@ -217,17 +221,17 @@ class SignupService:
         data['otp'] = hashed_otp
 
         # putting data into cache for validation
-        cache.set(f'{id}:signup', data, timeout=settings.SIGNUP_EXPIRE_SECONDS)
+        cache.set(f'{id}:signup', data, timeout=TokenExpiry.SIGNUP_EXPIRE_SECONDS)
 
         # creating new signup otp token
-        signup_otp_token = Jwt.generate(type='SO', data={'id': id}, seconds=settings.OTP_EXPIRE_SECONDS)
+        signup_otp_token = Jwt.generate(type='SO', data={'id': id}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
         if platform == Platform.MOBILE:
-            signup_request_token = request.META.get('HTTP_SRT')
+            signup_request_token = request.META.get(HeaderToken.SIGNUP_REQUEST_TOKEN)
         else:
-            signup_request_token = request.COOKIES.get('srt')
+            signup_request_token = request.COOKIES.get(CookieToken.SIGNUP_REQUEST_TOKEN)
 
         # sending otp email to user
-        Mailer.sendEmail(email, f'''Your Verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {settings.OTP_EXPIRE_SECONDS} seconds.''')
+        Mailer.sendEmail(email, f'''Your Verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {TokenExpiry.OTP_EXPIRE_SECONDS} seconds.''')
 
         # sending response
         return { 
@@ -261,13 +265,13 @@ class LoginService:
         # creating login state
         login_state = LoginStateTokenService.create(
             user=user,
-            user_agent_header=request.META['HTTP_USER_AGENT'],
-            timeout=settings.AUTH_EXPIRE_SECONDS
+            user_agent_header=request.META[Header.USER_AGENT],
+            timeout=TokenExpiry.AUTH_EXPIRE_SECONDS
         )
         login_token = login_state.token
 
         # creating logged in authenticatin token
-        auth_token = Jwt.generate(type='LI', data={'uid': user.uuid}, seconds=settings.AUTH_EXPIRE_SECONDS)
+        auth_token = Jwt.generate(type=TokenType.LOGIN, data={'uid': user.uuid}, seconds=TokenExpiry.AUTH_EXPIRE_SECONDS)
 
         # getting user encryption key
         enc_key = UserService.get_user_enc_key(user)
@@ -304,14 +308,14 @@ class PasswordRecoveryService:
         data['otp'] = hashed_otp
 
         # creating password recovery session
-        cache.set(f'{user.uid}:pr', data, timeout=settings.PASSWORD_RECOVERY_EXPIRE_SECONDS)
+        cache.set(f'{user.uid}:pr', data, timeout=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
 
         # creating password recovery token
-        password_recovery_otp_token = Jwt.generate(type='PRO', data={'uid': user.uid}, seconds=settings.OTP_EXPIRE_SECONDS)
-        password_recovery_request_token = Jwt.generate(type='PRR', data={'uid': user.uid}, seconds=settings.PASSWORD_RECOVERY_EXPIRE_SECONDS)
+        password_recovery_otp_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_OTP, data={'uid': user.uid}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        password_recovery_request_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_REQUEST, data={'uid': user.uid}, seconds=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
 
         # sending otp email
-        Mailer.sendEmail(email, f'''Your Verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {settings.OTP_EXPIRE_SECONDS} seconds.''')
+        Mailer.sendEmail(email, f'''Your Verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {TokenExpiry.OTP_EXPIRE_SECONDS} seconds.''')
 
         return { 
             'message': f'Enter the otp sent to email {email}',
@@ -323,16 +327,17 @@ class PasswordRecoveryService:
     def verify_recovery_verification_tokens(request, platform: str):
         # retriving headers data 
         if platform == Platform.MOBILE:
-            _prot = request.META.get('HTTP_PROT')
-            _prrt = request.META.get('HTTP_PRRT')
+            _prot = request.META.get(HeaderToken.PASSWORD_RECOVERY_OTP_TOKEN)
+            _prrt = request.META.get(HeaderToken.PASSWORD_RECOVERY_REQUEST_TOKEN)
         else:
-            _prot = request.COOKIES.get('prot')
-            _prrt = request.COOKIES.get('prrt')
+            _prot = request.COOKIES.get(CookieToken.PASSWORD_RECOVERY_OTP_TOKEN)
+            _prrt = request.COOKIES.get(CookieToken.PASSWORD_RECOVERY_REQUEST_TOKEN)
+            
         success_o, payload_o = Jwt.validate(_prot)
         success_r, payload_r = Jwt.validate(_prrt)
             
         # validating token
-        is_verified = success_o and payload_o.get('type') == 'PRO' and success_r and payload_r.get('type') == 'PRR' and payload_o['data']['uid'] == payload_r['data']['uid']
+        is_verified = success_o and payload_o.get('type') == TokenType.PASSWORD_RECOVERY_OTP and success_r and payload_r.get('type') == TokenType.PASSWORD_RECOVERY_REQUEST and payload_o['data']['uid'] == payload_r['data']['uid']
         uid = payload_o['data']['uid'] if is_verified else None
         return is_verified, uid
     
@@ -350,7 +355,7 @@ class PasswordRecoveryService:
     @staticmethod
     def generate_new_pass_token(uid) -> dict:
         # creating password recovery verification token
-        password_recovery_new_pass_token = Jwt.generate(type='PRNP', data={'uid': uid}, seconds=settings.PASSWORD_EXPIRE_SECONDS)
+        password_recovery_new_pass_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_NEW_PASS, data={'uid': uid}, seconds=TokenExpiry.PASSWORD_EXPIRE_SECONDS)
 
         # sending response
         return {
@@ -362,13 +367,13 @@ class PasswordRecoveryService:
     def verify_new_pass_tokens(request, platform: str):
         # retriving headers data
         if platform == Platform.MOBILE:
-            _prnpt = request.META.get('HTTP_PRNPT')
+            _prnpt = request.META.get(HeaderToken.PASSWORD_RECOVERY_NEW_PASS_TOKEN)
         else:
-            _prnpt = request.COOKIES.get('prnpt')
+            _prnpt = request.COOKIES.get(CookieToken.PASSWORD_RECOVERY_NEW_PASS_TOKEN)
         success, payload = Jwt.validate(_prnpt)
             
         # validating token
-        is_verified = success and payload.get('type') == 'PRNP'
+        is_verified = success and payload.get('type') == TokenType.PASSWORD_RECOVERY_NEW_PASS
         uid = payload['data']['uid'] if is_verified else None
         return is_verified, uid
     
@@ -376,13 +381,14 @@ class PasswordRecoveryService:
     def verify_resent_otp_tokens(request, platform: str):
         # retriving headers data
         if platform == Platform.MOBILE:
-            _prrt = request.META.get('HTTP_PRRT')
+            _prrt = request.META.get(HeaderToken.PASSWORD_RECOVERY_REQUEST_TOKEN)
         else:
-            _prrt = request.COOKIES.get('prrt')
+            _prrt = request.COOKIES.get(CookieToken.PASSWORD_RECOVERY_REQUEST_TOKEN)
+            
         success, payload = Jwt.validate(_prrt)
 
         # validating token
-        is_verified = success and payload.get('type') == 'PRR'
+        is_verified = success and payload.get('type') == TokenType.PASSWORD_RECOVERY_REQUEST
         uid = payload['data']['uid'] if is_verified else None
 
         return is_verified, uid
@@ -400,17 +406,17 @@ class PasswordRecoveryService:
         data['otp'] = hashed_otp
 
         # assiging new data to password recovery session
-        cache.set(f'{uid}:pr', data, timeout=settings.PASSWORD_RECOVERY_EXPIRE_SECONDS)
+        cache.set(f'{uid}:pr', data, timeout=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
 
         # generating new password recovery token
-        password_recovery_otp_token = Jwt.generate(type='PRO', data={'uid': uid}, seconds=settings.OTP_EXPIRE_SECONDS)
+        password_recovery_otp_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_OTP, data={'uid': uid}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
         if platform == Platform.MOBILE:
-            password_recovery_request_token = request.META.get('HTTP_PRRT')
+            password_recovery_request_token = request.META.get(HeaderToken.PASSWORD_RECOVERY_REQUEST_TOKEN)
         else:
-            password_recovery_request_token = request.COOKIES.get('prrt')
+            password_recovery_request_token = request.COOKIES.get(CookieToken.PASSWORD_RECOVERY_REQUEST_TOKEN)
 
         # sending otp email to user
-        Mailer.sendEmail(email, f'''Your Verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {settings.OTP_EXPIRE_SECONDS} seconds.''')
+        Mailer.sendEmail(email, f'''Your Verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {TokenExpiry.OTP_EXPIRE_SECONDS} seconds.''')
 
         # sending response
         return { 
