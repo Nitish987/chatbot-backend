@@ -134,7 +134,8 @@ REST_FRAMEWORK = {
 
 # Jwt Config
 
-JWT_SECRET = getenv('JWT_SECRET')
+JWT_ACCESS_SECRET = getenv('JWT_ACCESS_SECRET')
+JWT_REFRESH_SECRET = getenv('JWT_REFRESH_SECRET')
 
 # Softauth api key
 

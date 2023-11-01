@@ -82,24 +82,21 @@ class SignupVerification(APIView):
                     user = SignupService.create_user(data)
 
                     # generating auth tokens
-                    content = LoginService.generate_auth_token(user, request)
+                    content = LoginService.generate_auth_token(user)
 
                     # sending response
-                    response = Response.success({ 'uid': content['uid'], 'enc_key': content['enc_key']})
+                    response = Response.success({ 
+                        'uid': content['uid'], 
+                        'at': content['at'],
+                        'enc_key': content['enc_key']
+                    })
                     response.delete_cookie(CookieToken.SIGNUP_OTP_TOKEN)
                     response.delete_cookie(CookieToken.SIGNUP_REQUEST_TOKEN)
                     response.set_cookie(
-                        'at', 
-                        content['at'], 
-                        httponly=True, 
-                        expires=TokenExpiry.AUTH_EXPIRE_SECONDS, 
-                        samesite='None', 
-                        secure=True
-                    )
-                    response.set_cookie(
-                        'lst', 
-                        content['lst'], 
-                        expires=TokenExpiry.AUTH_EXPIRE_SECONDS, 
+                        CookieToken.REFRESH_TOKEN, 
+                        content['rt'], 
+                        expires=TokenExpiry.REFRESH_EXPIRE_SECONDS, 
+                        httponly=True,
                         samesite='None', 
                         secure=True
                     )
@@ -189,12 +186,22 @@ class Login(APIView):
 
                 if user is not None:
                     # generating auth tokens
-                    content = LoginService.generate_auth_token(user, request)
+                    content = LoginService.generate_auth_token(user)
 
                     # sending response
-                    response = Response.success({ 'uid': content['uid'], 'enc_key': content['enc_key']})
-                    response.set_cookie('at', content['at'], httponly=True, expires=TokenExpiry.AUTH_EXPIRE_SECONDS, samesite='None', secure=True)
-                    response.set_cookie('lst', content['lst'], expires=TokenExpiry.AUTH_EXPIRE_SECONDS, samesite='None', secure=True)
+                    response = Response.success({ 
+                        'uid': content['uid'], 
+                        'at': content['at'],
+                        'enc_key': content['enc_key']
+                    })
+                    response.set_cookie(
+                        CookieToken.REFRESH_TOKEN, 
+                        content['rt'], 
+                        expires=TokenExpiry.REFRESH_EXPIRE_SECONDS, 
+                        httponly=True,
+                        samesite='None', 
+                        secure=True
+                    )
                     return response
 
                 # sending invalid credentials error response

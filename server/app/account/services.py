@@ -224,7 +224,7 @@ class SignupService:
         cache.set(f'{id}:signup', data, timeout=TokenExpiry.SIGNUP_EXPIRE_SECONDS)
 
         # creating new signup otp token
-        signup_otp_token = Jwt.generate(type='SO', data={'id': id}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        signup_otp_token = Jwt.generate(type=TokenType.SIGNUP_OTP, data={'id': id}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
         if platform == Platform.MOBILE:
             signup_request_token = request.META.get(HeaderToken.SIGNUP_REQUEST_TOKEN)
         else:
@@ -261,26 +261,29 @@ class LoginService:
         return user
     
     @staticmethod
-    def generate_auth_token(user: User, request) -> dict:
-        # creating login state
-        login_state = LoginStateTokenService.create(
-            user=user,
-            user_agent_header=request.META[Header.USER_AGENT],
-            timeout=TokenExpiry.AUTH_EXPIRE_SECONDS
-        )
-        login_token = login_state.token
-
+    def generate_auth_token(user: User) -> dict:
         # creating logged in authenticatin token
-        auth_token = Jwt.generate(type=TokenType.LOGIN, data={'uid': user.uuid}, seconds=TokenExpiry.AUTH_EXPIRE_SECONDS)
+        access_token = Jwt.generate(
+            type=TokenType.LOGIN,
+            data={'uid': user.uuid},
+            category=Jwt.ACCESS, 
+            seconds=TokenExpiry.ACCESS_EXPIRE_SECONDS
+        )
+        refresh_token = Jwt.generate(
+            type=TokenType.LOGIN,
+            data={'uid': user.uuid},
+            category=Jwt.REFRESH,
+            seconds=TokenExpiry.REFRESH_EXPIRE_SECONDS
+        )
 
         # getting user encryption key
         enc_key = UserService.get_user_enc_key(user)
 
         return { 
             'uid': user.uuid,
-            'at': auth_token,
-            'lst': login_token,
-            'enc_key': enc_key,
+            'at': access_token,
+            'rt': refresh_token,
+            'enc_key': enc_key
         }
 
     @staticmethod
