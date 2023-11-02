@@ -87,8 +87,7 @@ class SignupVerification(APIView):
                     # sending response
                     response = Response.success({ 
                         'uid': content['uid'], 
-                        'at': content['at'],
-                        'enc_key': content['enc_key']
+                        'at': content['at']
                     })
                     response.delete_cookie(CookieToken.SIGNUP_OTP_TOKEN)
                     response.delete_cookie(CookieToken.SIGNUP_REQUEST_TOKEN)
@@ -191,8 +190,7 @@ class Login(APIView):
                     # sending response
                     response = Response.success({ 
                         'uid': content['uid'], 
-                        'at': content['at'],
-                        'enc_key': content['enc_key']
+                        'at': content['at']
                     })
                     response.set_cookie(
                         CookieToken.REFRESH_TOKEN, 
