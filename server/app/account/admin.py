@@ -27,10 +27,3 @@ class UserAdmin(BaseUserAdmin):
     filter_horizontal = ()
 
 admin.site.register(models.User, UserAdmin)
-
-
-# user login state portal
-class LoginStateAdmin(admin.ModelAdmin):
-    list_display = ('user', 'token')
-
-admin.site.register(models.LoginState, LoginStateAdmin)

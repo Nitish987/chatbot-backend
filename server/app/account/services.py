@@ -1,4 +1,3 @@
-import user_agents
 from django.conf import settings
 from django.core.cache import cache
 from utils import otp, generator, security
@@ -6,13 +5,10 @@ from utils.platform import Platform
 from utils.messenger import Mailer
 from utils.log import Log
 from .jwt_token import Jwt
-from .models import User, LoginState
+from .models import User
 from .exceptions import UserNotFoundError, NoCacheDataError
 from django.contrib.auth import authenticate
-from django.utils import timezone
-from datetime import timedelta
 from constants.tokens import TokenExpiry, TokenType, CookieToken, HeaderToken
-from constants.headers import Header
 
 
 
@@ -80,43 +76,6 @@ class UserService:
         user.last_name = last_name.lower()
         user.save()
 
-
-
-
-
-class LoginStateTokenService:
-    '''Web Login State Token Service for creating, fetching and deleting login token and it's state'''
-    @staticmethod
-    def create(user: User, user_agent_header, timeout) -> LoginState:
-        user_agent = user_agents.parse(user_agent_header)
-        login_token = generator.generate_token()
-
-        login_states = LoginState.objects.filter(user=user).order_by('-created_on')
-        if len(login_states) == 5:
-            login_states[0].delete()
-        
-        created_on = timezone.now()
-        active_until = created_on + timedelta(seconds=timeout)
-            
-        login_state = LoginState.objects.create(
-            user=user,
-            token=login_token,
-            device=user_agent.device.family,
-            os=user_agent.os.family,
-            browser=user_agent.browser.family,
-            created_on=created_on,
-            active_until=active_until,
-        )
-
-        return login_state
-    
-    @staticmethod
-    def get(user: User, token: str) -> LoginState:
-        return LoginState.objects.get(user=user, token=token)
-
-    @staticmethod
-    def delete(user: User, token: str):
-        LoginStateTokenService.get(user=user, token=token).delete()
 
 
 
@@ -287,10 +246,7 @@ class LoginService:
         }
 
     @staticmethod
-    def logout(user, platform_lst_token=None) -> dict:
-        # deleting login state
-        LoginStateTokenService.delete(user=user, token=platform_lst_token)
-            
+    def logout(user) -> dict:
         # removing msg_token from user
         UserService.update_fcm_token(user=user)
 
@@ -303,7 +259,7 @@ class LoginService:
 class PasswordRecoveryService:
     '''Password Recovery Service used when user forgets account password'''
     @staticmethod
-    def recover_password(user, data) -> dict:
+    def recover_password(user: User, data) -> dict:
         email = data.get('email')
 
         # generating otp and hashed otp
@@ -311,11 +267,11 @@ class PasswordRecoveryService:
         data['otp'] = hashed_otp
 
         # creating password recovery session
-        cache.set(f'{user.uid}:pr', data, timeout=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
+        cache.set(f'{user.uuid}:pr', data, timeout=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
 
         # creating password recovery token
-        password_recovery_otp_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_OTP, data={'uid': user.uid}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
-        password_recovery_request_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_REQUEST, data={'uid': user.uid}, seconds=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
+        password_recovery_otp_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_OTP, data={'uid': user.uuid}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        password_recovery_request_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_REQUEST, data={'uid': user.uuid}, seconds=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
 
         # sending otp email
         Mailer.sendEmail(email, f'''Your Verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {TokenExpiry.OTP_EXPIRE_SECONDS} seconds.''')
@@ -444,7 +400,7 @@ class ProfileService:
         response = {
             'type': user.acc_type,
             'profile': {
-                'uid': user.uid,
+                'uid': user.uuid,
                 'name': user.full_name,
                 'username': user.username,
                 'photo': user.photo.url,
@@ -468,7 +424,7 @@ class ProfileService:
         return {
             'type': user.acc_type,
             'profile': {
-                'uid': user.uid,
+                'uid': user.uuid,
                 'name': user.full_name,
                 'username': user.username,
                 'photo': user.photo.url,

@@ -232,22 +232,25 @@ class PasswordRecovery(APIView):
                 response.set_cookie(
                     CookieToken.PASSWORD_RECOVERY_OTP_TOKEN, 
                     content['prot'], 
-                    httponly=True, 
                     expires=TokenExpiry.OTP_EXPIRE_SECONDS, 
-                    samesite='None'
+                    httponly=True, 
+                    samesite='None',
+                    secure=True
                 )
                 response.set_cookie(
                     CookieToken.PASSWORD_RECOVERY_REQUEST_TOKEN, 
                     content['prrt'], 
-                    httponly=True, 
                     expires=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS, 
-                    samesite='None'
+                    httponly=True, 
+                    samesite='None',
+                    secure=True
                 )
                 return response
 
             # sending error response
             return Response.errors(serializer.errors)
-        except:
+        except Exception as e:
+            Log.error(e)
             return Response.something_went_wrong()
 
 
@@ -284,9 +287,10 @@ class PasswordRecoveryVerification(APIView):
                     response.set_cookie(
                         CookieToken.PASSWORD_RECOVERY_NEW_PASS_TOKEN, 
                         content['prnpt'], 
-                        httponly=True, 
                         expires=TokenExpiry.PASSWORD_EXPIRE_SECONDS, 
-                        samesite='None'
+                        httponly=True, 
+                        samesite='None',
+                        secure=True
                     )
                     return response
 
@@ -368,16 +372,18 @@ class ResentPasswordRecoveryOtp(APIView):
                 response.set_cookie(
                     CookieToken.PASSWORD_RECOVERY_OTP_TOKEN, 
                     content['prot'], 
-                    httponly=True, 
                     expires=TokenExpiry.OTP_EXPIRE_SECONDS, 
-                    samesite='None'
+                    httponly=True, 
+                    samesite='None',
+                    secure=True
                 )
                 response.set_cookie(
                     CookieToken.PASSWORD_RECOVERY_REQUEST_TOKEN, 
                     content['prrt'], 
-                    httponly=True, 
                     expires=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS, 
-                    samesite='None'
+                    httponly=True, 
+                    samesite='None',
+                    secure=True
                 )
                 return response
             
@@ -509,7 +515,7 @@ class Logout(APIView):
 
     def post(self, request):
         try:
-            response = LoginService.logout(request.user, platform_lst_token=request.META['HTTP_LST'])
+            response = LoginService.logout(request.user)
 
             # sending response and logout current authenticated user
             return Response.success(response)

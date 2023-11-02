@@ -3,7 +3,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from utils import generator, security
 from django.conf import settings
-from django.utils import timezone
 
 
 # User model and manager
@@ -118,19 +117,3 @@ class User(AbstractBaseUser):
     @property
     def full_name(self) -> str:
         return string.capwords(f'{self.first_name} {self.last_name}')
-
-
-# Login State
-class LoginState(models.Model):
-    '''Login State Model Class'''
-    user = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
-    token = models.CharField(default='', max_length=500)
-    device = models.CharField(default='', max_length=20)
-    os = models.CharField(default='', max_length=20)
-    browser = models.CharField(default='', max_length=20)
-    created_on = models.DateTimeField(default=None)
-    active_until = models.DateTimeField(default=None)
-
-    @property
-    def is_active(self):
-        return self.active_until >= timezone.now()
