@@ -5,8 +5,8 @@ from utils.platform import Platform
 from utils.messenger import Mailer
 from utils.log import Log
 from .jwt_token import Jwt
-from .models import User
-from .exceptions import UserNotFoundError, NoCacheDataError
+from .models import User, LoginState
+from .exceptions import UserNotFoundError, NoCacheDataError, NoDataError
 from django.contrib.auth import authenticate
 from constants.tokens import TokenExpiry, TokenType, CookieToken, HeaderToken
 
@@ -221,29 +221,63 @@ class LoginService:
     
     @staticmethod
     def generate_auth_token(user: User) -> dict:
-        # creating logged in authenticatin token
+        # generating access token
         access_token = Jwt.generate(
             type=TokenType.LOGIN,
-            data={'uid': user.uuid},
+            data={'uid': user.uid},
             category=Jwt.ACCESS, 
             seconds=TokenExpiry.ACCESS_EXPIRE_SECONDS
         )
-        refresh_token = Jwt.generate(
-            type=TokenType.LOGIN,
-            data={'uid': user.uuid},
-            category=Jwt.REFRESH,
-            seconds=TokenExpiry.REFRESH_EXPIRE_SECONDS
-        )
+
+        # generating refresh token if no session found for the user
+        login_state = LoginState.objects.filter(user=user)
+        if login_state.exists() and Jwt.validate(login_state[0].refresh_token, category=Jwt.REFRESH)[0]:
+            refresh_token = login_state[0].refresh_token
+        else:
+            session_id = generator.generate_identity()
+            refresh_token = Jwt.generate(
+                type=TokenType.LOGIN,
+                data={'id': session_id},
+                category=Jwt.REFRESH,
+                seconds=TokenExpiry.REFRESH_EXPIRE_SECONDS
+            )
+            LoginState.objects.create(user=user, session_id=session_id, refresh_token=refresh_token)
 
         # getting user encryption key
         enc_key = UserService.get_user_enc_key(user)
 
         return { 
-            'uid': user.uuid,
+            'uid': user.uid,
             'at': access_token,
             'rt': refresh_token,
             'enc_key': enc_key
         }
+    
+    @staticmethod
+    def refresh_auth_token(refresh_token: str) -> dict:
+        is_valid, payload = Jwt.validate(refresh_token)
+        if is_valid:
+            user = LoginState.objects.get(session_id=payload['id']).user
+
+            # refreshing access token
+            access_token = Jwt.generate(
+                type=TokenType.LOGIN,
+                data={'uid': user.uid},
+                category=Jwt.ACCESS, 
+                seconds=TokenExpiry.ACCESS_EXPIRE_SECONDS
+            )
+
+            # getting user encryption key
+            enc_key = UserService.get_user_enc_key(user)
+            
+            return { 
+                'uid': user.uid,
+                'at': access_token,
+                'rt': refresh_token,
+                'enc_key': enc_key
+            }
+        raise NoDataError('No Session Found.')
+        
 
     @staticmethod
     def logout(user) -> dict:
@@ -267,11 +301,11 @@ class PasswordRecoveryService:
         data['otp'] = hashed_otp
 
         # creating password recovery session
-        cache.set(f'{user.uuid}:pr', data, timeout=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
+        cache.set(f'{user.uid}:pr', data, timeout=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
 
         # creating password recovery token
-        password_recovery_otp_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_OTP, data={'uid': user.uuid}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
-        password_recovery_request_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_REQUEST, data={'uid': user.uuid}, seconds=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
+        password_recovery_otp_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_OTP, data={'uid': user.uid}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        password_recovery_request_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_REQUEST, data={'uid': user.uid}, seconds=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
 
         # sending otp email
         Mailer.sendEmail(email, f'''Your Verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {TokenExpiry.OTP_EXPIRE_SECONDS} seconds.''')
@@ -400,7 +434,7 @@ class ProfileService:
         response = {
             'type': user.acc_type,
             'profile': {
-                'uid': user.uuid,
+                'uid': user.uid,
                 'name': user.full_name,
                 'username': user.username,
                 'photo': user.photo.url,
@@ -424,7 +458,7 @@ class ProfileService:
         return {
             'type': user.acc_type,
             'profile': {
-                'uid': user.uuid,
+                'uid': user.uid,
                 'name': user.full_name,
                 'username': user.username,
                 'photo': user.photo.url,

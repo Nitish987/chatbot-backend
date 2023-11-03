@@ -114,7 +114,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'app.account.auth.WebUserAuthentication',
+        'app.account.auth.UserAuthentication',
     ),
     'DEFAULT_THROTTLE_RATES': {
         'signup': '10/min',
@@ -152,7 +152,7 @@ SERVER_ENC_KEY = getenv('SERVER_ENC_KEY')
 # Cors Configuration
 
 CORS_ALLOWED_ORIGINS = [getenv('CLIENT_ORIGIN')]
-CORS_ALLOW_HEADERS = (*default_headers, 'AAK', 'ACK', 'LST', 'UID')
+CORS_ALLOW_HEADERS = (*default_headers, 'UID')
 CORS_ALLOW_CREDENTIALS = True
 
 # Internationalization

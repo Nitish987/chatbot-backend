@@ -72,7 +72,7 @@ class UserManager(BaseUserManager):
 # user model
 class User(AbstractBaseUser):
     '''User Model Class'''
-    uid = models.UUIDField(default=generator.uuid.uuid4, max_length=36, unique=True, primary_key=True, editable=False)
+    uid = models.CharField(default=generator.generate_identity, max_length=36, unique=True, primary_key=True, editable=False)
     first_name = models.CharField(default='', max_length=255)
     last_name = models.CharField(default='', max_length=255)
     email = models.EmailField(default='', max_length=255, unique=True)
@@ -109,11 +109,17 @@ class User(AbstractBaseUser):
     @property
     def is_staff(self):
         return self.is_admin
-    
-    @property
-    def uuid(self) -> str:
-        return str(self.uid)
 
     @property
     def full_name(self) -> str:
         return string.capwords(f'{self.first_name} {self.last_name}')
+
+
+
+
+
+# Login State
+class LoginState(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    session_id = models.CharField(default='', max_length=100, unique=True)
+    refresh_token = models.CharField(default='', max_length=36, unique=True)

@@ -8,7 +8,7 @@ class TokenType:
 
 
 class HeaderToken:
-    ACCESS_TOKEN = 'HTTP_AT'
+    ACCESS_TOKEN = 'HTTP_AUTHORIZATION'
     REFRESH_TOKEN = 'HTTP_RT'
     LOGIN_STATE_TOKEN = 'HTTP_LST'
     SIGNUP_OTP_TOKEN = 'HTTP_SOT'

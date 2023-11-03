@@ -1,9 +1,9 @@
 from rest_framework.views import APIView
-from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from . import serializers
+from .auth import WebRefreshTokenAuthentication
 from .services import SignupService, LoginService, UserService, PasswordRecoveryService, ProfileService
-from .permissions import IsRequestValid, IsAccountCreationKeyValid
 from .throttling import SignupThrottling, SignupVerificationThrottling, ResentSignupOtpThrottling, LoginThrottling, PasswordRecoveryThrottling, PasswordRecoveryVerificationThrottling, PasswordRecoveryNewPasswordThrottling, ResentPasswordRecoveryOtpThrottling, LogoutThrottling, AuthenticatedUserThrottling, ChangeNamesThrottling
 from utils.response import Response
 from utils.log import Log
@@ -14,8 +14,6 @@ from constants.tokens import TokenExpiry, CookieToken
 
 # Signup
 class Signup(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid]
     throttle_classes = [SignupThrottling]
 
     def post(self, request):
@@ -57,8 +55,6 @@ class Signup(APIView):
 
 # Signup Verification
 class SignupVerification(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid, IsAccountCreationKeyValid]
     throttle_classes = [SignupVerificationThrottling]
 
     def post(self, request):
@@ -122,8 +118,6 @@ class SignupVerification(APIView):
 
 # Signup Resent OTP
 class ResentSignupOtp(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid]
     throttle_classes = [ResentSignupOtpThrottling]
 
     def post(self, request):
@@ -171,8 +165,6 @@ class ResentSignupOtp(APIView):
 
 # Login
 class Login(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid]
     throttle_classes = [LoginThrottling]
 
     def post(self, request):
@@ -207,7 +199,8 @@ class Login(APIView):
 
             # sending error reponse
             return Response.errors(serializer.errors)
-        except:
+        except Exception as e:
+            Log.error(e)
             return Response.something_went_wrong()
 
 
@@ -216,8 +209,6 @@ class Login(APIView):
 
 # Password Recovery
 class PasswordRecovery(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid]
     throttle_classes = [PasswordRecoveryThrottling]
 
     def post(self, request):
@@ -259,8 +250,6 @@ class PasswordRecovery(APIView):
 
 # Password Recovery Verification
 class PasswordRecoveryVerification(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid]
     throttle_classes = [PasswordRecoveryVerificationThrottling]
 
     def post(self, request):
@@ -313,8 +302,6 @@ class PasswordRecoveryVerification(APIView):
 
 # Password Recovery New Password
 class PasswordRecoveryNewPassword(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid]
     throttle_classes = [PasswordRecoveryNewPasswordThrottling]
 
     def post(self, request):
@@ -355,8 +342,6 @@ class PasswordRecoveryNewPassword(APIView):
 
 # Password Recovery Resent OTP
 class ResentPasswordRecoveryOtp(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid]
     throttle_classes = [ResentPasswordRecoveryOtpThrottling]
 
     def post(self, request):
@@ -403,8 +388,7 @@ class ResentPasswordRecoveryOtp(APIView):
 
 # Change Password
 class ChangePassword(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid, IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     throttle_classes = [AuthenticatedUserThrottling]
 
     def post(self, request):
@@ -431,8 +415,7 @@ class ChangePassword(APIView):
 
 # Change User Names
 class ChangeUserNames(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid, IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     throttle_classes = [ChangeNamesThrottling]
 
     def post(self, request):
@@ -463,8 +446,7 @@ class ChangeUserNames(APIView):
 
 # User FCM Token
 class UserFCMessagingToken(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid, IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     throttle_classes = [AuthenticatedUserThrottling]
 
     def post(self, request):
@@ -490,16 +472,27 @@ class UserFCMessagingToken(APIView):
 
 
 # Login check
-class LoginCheck(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid, IsAuthenticated]
+class RefreshToken(APIView):
     throttle_classes = [AuthenticatedUserThrottling]
 
     def get(self, request):
         try:
-            return Response.success({
-                'message': 'Login Check'
+            content = LoginService.refresh_auth_token(request.COOKIES.get(CookieToken.REFRESH_TOKEN))
+
+            # sending response
+            response = Response.success({ 
+                'uid': content['uid'], 
+                'at': content['at']
             })
+            response.set_cookie(
+                CookieToken.REFRESH_TOKEN, 
+                content['rt'], 
+                expires=TokenExpiry.REFRESH_EXPIRE_SECONDS, 
+                httponly=True,
+                samesite='None', 
+                secure=True
+            )
+            return response
         except:
             return Response.something_went_wrong()
 
@@ -509,8 +502,7 @@ class LoginCheck(APIView):
 
 # Logout User
 class Logout(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid, IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     throttle_classes = [LogoutThrottling]
 
     def post(self, request):
@@ -528,8 +520,7 @@ class Logout(APIView):
 
 # Get User Profile
 class UserProfile(APIView):
-    parser_classes = [JSONParser]
-    permission_classes = [IsRequestValid, IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     throttle_classes = [AuthenticatedUserThrottling]
 
     def get(self, request, uid):
@@ -569,7 +560,7 @@ class UserProfile(APIView):
 # Change Profile Photo
 class ProfilePhotoUpdate(APIView):
     parser_classes = [FormParser, MultiPartParser]
-    permission_classes = [IsRequestValid, IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     throttle_classes = [AuthenticatedUserThrottling]
 
     def put(self, request, uid):
