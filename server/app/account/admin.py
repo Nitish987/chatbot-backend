@@ -27,3 +27,10 @@ class UserAdmin(BaseUserAdmin):
     filter_horizontal = ()
 
 admin.site.register(models.User, UserAdmin)
+
+
+# login state admin portal
+class LoginStateAdmin(admin.ModelAdmin):
+    list_display = ('user', 'session_id')
+
+admin.site.register(models.LoginState, LoginStateAdmin)

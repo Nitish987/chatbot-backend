@@ -4,8 +4,8 @@ class NoCacheDataError(Exception):
         super().__init__(self.message)
 
 
-class NoDataError(Exception):
-    def __init__(self, message='No data available.'):
+class NoSessionError(Exception):
+    def __init__(self, message='No session available.'):
         self.message = message
         super().__init__(self.message)
 

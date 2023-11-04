@@ -6,7 +6,7 @@ from utils.messenger import Mailer
 from utils.log import Log
 from .jwt_token import Jwt
 from .models import User, LoginState
-from .exceptions import UserNotFoundError, NoCacheDataError, NoDataError
+from .exceptions import UserNotFoundError, NoCacheDataError, NoSessionError
 from django.contrib.auth import authenticate
 from constants.tokens import TokenExpiry, TokenType, CookieToken, HeaderToken
 
@@ -255,9 +255,9 @@ class LoginService:
     
     @staticmethod
     def refresh_auth_token(refresh_token: str) -> dict:
-        is_valid, payload = Jwt.validate(refresh_token)
+        is_valid, payload = Jwt.validate(refresh_token, category=Jwt.REFRESH)
         if is_valid:
-            user = LoginState.objects.get(session_id=payload['id']).user
+            user = LoginState.objects.get(session_id=payload['data']['id']).user
 
             # refreshing access token
             access_token = Jwt.generate(
@@ -276,7 +276,7 @@ class LoginService:
                 'rt': refresh_token,
                 'enc_key': enc_key
             }
-        raise NoDataError('No Session Found.')
+        raise NoSessionError('Unauthenticated! No Session Found.')
         
 
     @staticmethod

@@ -2,7 +2,6 @@ from rest_framework.views import APIView
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from . import serializers
-from .auth import WebRefreshTokenAuthentication
 from .services import SignupService, LoginService, UserService, PasswordRecoveryService, ProfileService
 from .throttling import SignupThrottling, SignupVerificationThrottling, ResentSignupOtpThrottling, LoginThrottling, PasswordRecoveryThrottling, PasswordRecoveryVerificationThrottling, PasswordRecoveryNewPasswordThrottling, ResentPasswordRecoveryOtpThrottling, LogoutThrottling, AuthenticatedUserThrottling, ChangeNamesThrottling
 from utils.response import Response
@@ -28,16 +27,16 @@ class Signup(APIView):
                 response.set_cookie(
                     CookieToken.SIGNUP_OTP_TOKEN, 
                     content['sot'], 
-                    httponly=True, 
                     expires=TokenExpiry.OTP_EXPIRE_SECONDS, 
+                    httponly=True, 
                     samesite='None', 
                     secure=True
                 )
                 response.set_cookie(
                     CookieToken.SIGNUP_REQUEST_TOKEN, 
                     content['srt'], 
-                    httponly=True, 
                     expires=TokenExpiry.SIGNUP_EXPIRE_SECONDS, 
+                    httponly=True, 
                     samesite='None',
                     secure=True
                 )
@@ -85,8 +84,6 @@ class SignupVerification(APIView):
                         'uid': content['uid'], 
                         'at': content['at']
                     })
-                    response.delete_cookie(CookieToken.SIGNUP_OTP_TOKEN)
-                    response.delete_cookie(CookieToken.SIGNUP_REQUEST_TOKEN)
                     response.set_cookie(
                         CookieToken.REFRESH_TOKEN, 
                         content['rt'], 
@@ -95,6 +92,8 @@ class SignupVerification(APIView):
                         samesite='None', 
                         secure=True
                     )
+                    response.delete_cookie(CookieToken.SIGNUP_OTP_TOKEN)
+                    response.delete_cookie(CookieToken.SIGNUP_REQUEST_TOKEN)
                     return response
 
                 # sending error response
@@ -493,7 +492,8 @@ class RefreshToken(APIView):
                 secure=True
             )
             return response
-        except:
+        except Exception as e:
+            Log.error(e)
             return Response.something_went_wrong()
 
 
