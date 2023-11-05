@@ -2,7 +2,7 @@ import string
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from common.utils import generator
-from common.platform import security
+from common.platform.security import AES256
 from django.conf import settings
 
 
@@ -36,7 +36,7 @@ class UserManager(BaseUserManager):
 
         # preparing user encryption key
         enc_key = generator.generate_password_key()
-        aes = security.AES256(settings.SERVER_ENC_KEY)
+        aes = AES256(settings.SERVER_ENC_KEY)
         enc_key = aes.encrypt(enc_key)
 
         # setting user config

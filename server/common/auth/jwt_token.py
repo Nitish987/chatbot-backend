@@ -22,9 +22,15 @@ class Jwt:
             return (False, payload)
     
     @staticmethod
-    def generate(type, data, category: int = ACCESS, seconds = None):
+    def generate(type: str, sub: str | None = None, data: dict | None = None, category: int = ACCESS, seconds: int | None = None):
         '''returns generated JWT token using the given payload type (token for type), data, t_type (token type, can be ACCESS or REFRESH) and seconds''' 
-        payload = { 'type': type, 'data': data }
+        payload = { 'type': type }
+
+        if sub != None:
+            payload['sub'] = sub
+        
+        if data != None:
+            payload['data'] = data
 
         if seconds != None:
             payload['exp'] = timezone.now() + timedelta(seconds=seconds)

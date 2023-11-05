@@ -6,6 +6,7 @@ from common.utils.messenger import Mailer
 from common.debug.log import Log
 from common.exception.exceptions import UserNotFoundError, NoCacheDataError, NoSessionError
 from common.auth.jwt_token import Jwt
+from common.platform.security import AES256
 from .models import User, LoginState
 from django.contrib.auth import authenticate
 from constants.tokens import TokenExpiry, TokenType, CookieToken, HeaderToken
@@ -59,7 +60,7 @@ class UserService:
     
     @staticmethod
     def get_user_enc_key(user: User) -> str:
-        aes = security.AES256(settings.SERVER_ENC_KEY)
+        aes = AES256(settings.SERVER_ENC_KEY)
         enc_key = aes.decrypt(user.enc_key)
         return enc_key
 
@@ -94,7 +95,7 @@ class SignupService:
         id = generator.generate_identity()
 
         # adding encrypted password an hasted otp to data dict
-        aes = security.AES256(settings.SERVER_ENC_KEY)
+        aes = AES256(settings.SERVER_ENC_KEY)
         data['password'] = aes.encrypt(password)
         data['otp'] = hashed_otp
 
@@ -102,8 +103,8 @@ class SignupService:
         cache.set(f'{id}:signup', data, timeout=TokenExpiry.SIGNUP_EXPIRE_SECONDS)
 
         # generating signup otp token
-        signup_otp_token = Jwt.generate(type=TokenType.SIGNUP_OTP, data={'id': id}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
-        signup_request_token = Jwt.generate(type=TokenType.SIGNUP_REQUEST, data={'id': id}, seconds=TokenExpiry.SIGNUP_EXPIRE_SECONDS)
+        signup_otp_token = Jwt.generate(type=TokenType.SIGNUP_OTP, sub=id, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        signup_request_token = Jwt.generate(type=TokenType.SIGNUP_REQUEST, sub=id, seconds=TokenExpiry.SIGNUP_EXPIRE_SECONDS)
 
         # sending otp mail to user
         Mailer.sendEmail(email, f'''Your Verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {TokenExpiry.OTP_EXPIRE_SECONDS} seconds.''')
@@ -128,8 +129,8 @@ class SignupService:
         success_r, payload_r = Jwt.validate(_srt)
             
         # validating token
-        is_verified = success_o and payload_o.get('type') == TokenType.SIGNUP_OTP and success_r and payload_r.get('type') == TokenType.SIGNUP_REQUEST and payload_o['data']['id'] == payload_r['data']['id']
-        id = payload_o['data']['id'] if is_verified else None
+        is_verified = success_o and payload_o.get('type') == TokenType.SIGNUP_OTP and success_r and payload_r.get('type') == TokenType.SIGNUP_REQUEST and payload_o['sub'] == payload_r['sub']
+        id = payload_o['sub'] if is_verified else None
         return is_verified, id
     
     @staticmethod
@@ -146,7 +147,7 @@ class SignupService:
     @staticmethod
     def create_user(data: dict) -> User:
         # retriving hashed otp and decrypting password and changing the data dict password key value
-        aes = security.AES256(settings.SERVER_ENC_KEY)
+        aes = AES256(settings.SERVER_ENC_KEY)
         data['password'] = aes.decrypt(data['password'])
 
         # creating user with user profile
@@ -165,7 +166,7 @@ class SignupService:
 
         # validating token
         is_verified = success and payload.get('type') == TokenType.SIGNUP_REQUEST
-        id = payload['data']['id'] if is_verified else None
+        id = payload['sub'] if is_verified else None
 
         return is_verified, id
     
@@ -183,7 +184,7 @@ class SignupService:
         cache.set(f'{id}:signup', data, timeout=TokenExpiry.SIGNUP_EXPIRE_SECONDS)
 
         # creating new signup otp token
-        signup_otp_token = Jwt.generate(type=TokenType.SIGNUP_OTP, data={'id': id}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        signup_otp_token = Jwt.generate(type=TokenType.SIGNUP_OTP, sub=id, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
         if platform == Platform.MOBILE:
             signup_request_token = request.META.get(HeaderToken.SIGNUP_REQUEST_TOKEN)
         else:
@@ -224,7 +225,7 @@ class LoginService:
         # generating access token
         access_token = Jwt.generate(
             type=TokenType.LOGIN,
-            data={'uid': user.uid},
+            sub=user.uid,
             category=Jwt.ACCESS, 
             seconds=TokenExpiry.ACCESS_EXPIRE_SECONDS
         )
@@ -237,7 +238,7 @@ class LoginService:
             session_id = generator.generate_identity()
             refresh_token = Jwt.generate(
                 type=TokenType.LOGIN,
-                data={'id': session_id},
+                sub=session_id,
                 category=Jwt.REFRESH,
                 seconds=TokenExpiry.REFRESH_EXPIRE_SECONDS
             )
@@ -257,12 +258,12 @@ class LoginService:
     def refresh_auth_token(refresh_token: str) -> dict:
         is_valid, payload = Jwt.validate(refresh_token, category=Jwt.REFRESH)
         if is_valid:
-            user = LoginState.objects.get(session_id=payload['data']['id']).user
+            user = LoginState.objects.get(session_id=payload['sub']).user
 
             # refreshing access token
             access_token = Jwt.generate(
                 type=TokenType.LOGIN,
-                data={'uid': user.uid},
+                sub=user.uid,
                 category=Jwt.ACCESS, 
                 seconds=TokenExpiry.ACCESS_EXPIRE_SECONDS
             )
@@ -304,8 +305,8 @@ class PasswordRecoveryService:
         cache.set(f'{user.uid}:pr', data, timeout=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
 
         # creating password recovery token
-        password_recovery_otp_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_OTP, data={'uid': user.uid}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
-        password_recovery_request_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_REQUEST, data={'uid': user.uid}, seconds=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
+        password_recovery_otp_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_OTP, sub=user.uid, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        password_recovery_request_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_REQUEST, sub=user.uid, seconds=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
 
         # sending otp email
         Mailer.sendEmail(email, f'''Your Verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {TokenExpiry.OTP_EXPIRE_SECONDS} seconds.''')
@@ -330,8 +331,8 @@ class PasswordRecoveryService:
         success_r, payload_r = Jwt.validate(_prrt)
             
         # validating token
-        is_verified = success_o and payload_o.get('type') == TokenType.PASSWORD_RECOVERY_OTP and success_r and payload_r.get('type') == TokenType.PASSWORD_RECOVERY_REQUEST and payload_o['data']['uid'] == payload_r['data']['uid']
-        uid = payload_o['data']['uid'] if is_verified else None
+        is_verified = success_o and payload_o.get('type') == TokenType.PASSWORD_RECOVERY_OTP and success_r and payload_r.get('type') == TokenType.PASSWORD_RECOVERY_REQUEST and payload_o['sub'] == payload_r['sub']
+        uid = payload_o['sub'] if is_verified else None
         return is_verified, uid
     
     @staticmethod
@@ -348,7 +349,7 @@ class PasswordRecoveryService:
     @staticmethod
     def generate_new_pass_token(uid) -> dict:
         # creating password recovery verification token
-        password_recovery_new_pass_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_NEW_PASS, data={'uid': uid}, seconds=TokenExpiry.PASSWORD_EXPIRE_SECONDS)
+        password_recovery_new_pass_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_NEW_PASS, sub=uid, seconds=TokenExpiry.PASSWORD_EXPIRE_SECONDS)
 
         # sending response
         return {
@@ -367,7 +368,7 @@ class PasswordRecoveryService:
             
         # validating token
         is_verified = success and payload.get('type') == TokenType.PASSWORD_RECOVERY_NEW_PASS
-        uid = payload['data']['uid'] if is_verified else None
+        uid = payload['sub'] if is_verified else None
         return is_verified, uid
     
     @staticmethod
@@ -382,7 +383,7 @@ class PasswordRecoveryService:
 
         # validating token
         is_verified = success and payload.get('type') == TokenType.PASSWORD_RECOVERY_REQUEST
-        uid = payload['data']['uid'] if is_verified else None
+        uid = payload['sub'] if is_verified else None
 
         return is_verified, uid
     
@@ -402,7 +403,7 @@ class PasswordRecoveryService:
         cache.set(f'{uid}:pr', data, timeout=TokenExpiry.PASSWORD_RECOVERY_EXPIRE_SECONDS)
 
         # generating new password recovery token
-        password_recovery_otp_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_OTP, data={'uid': uid}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        password_recovery_otp_token = Jwt.generate(type=TokenType.PASSWORD_RECOVERY_OTP, sub=uid, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
         if platform == Platform.MOBILE:
             password_recovery_request_token = request.META.get(HeaderToken.PASSWORD_RECOVERY_REQUEST_TOKEN)
         else:
@@ -429,7 +430,7 @@ class UserIdentityService:
         actual_otp, hashed_otp = otp.generate()
         cache.set(f'{user.uid}:identity', {'otp': hashed_otp})
 
-        identity_otp_token = Jwt.generate(type=TokenType.IDENTITY_OTP, data={'uid': user.uid}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        identity_otp_token = Jwt.generate(type=TokenType.IDENTITY_OTP, sub=user.uid, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
         
         Mailer.sendEmail(user.email, f'''Your verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {TokenExpiry.OTP_EXPIRE_SECONDS} seconds.''')
 
@@ -446,10 +447,10 @@ class UserIdentityService:
             _idot = request.COOKIES.get(CookieToken.IDENTITY_OTP_TOKEN)
         success, payload = Jwt.validate(_idot)
 
-        is_valid = success and payload.get('type') == TokenType.IDENTITY_OTP and payload['data']['uid'] == request.user.uid
-        uid = payload['data']['uid']
+        is_verified = success and payload.get('type') == TokenType.IDENTITY_OTP and payload['sub'] == request.user.uid
+        uid = payload['sub'] if is_verified else None
 
-        return is_valid, uid
+        return is_verified, uid
 
     @staticmethod
     def retrieve_identity_cache_data(uid):
@@ -464,7 +465,7 @@ class UserIdentityService:
     
     @staticmethod
     def generate_identity_token(user: User):
-        identity_token = Jwt.generate(type=TokenType.IDENTITY, data={'uid': user.uid}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        identity_token = Jwt.generate(type=TokenType.IDENTITY, sub=user.uid, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
         return {
             'idt': identity_token
         }
