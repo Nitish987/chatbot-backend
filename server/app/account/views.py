@@ -3,12 +3,12 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from . import serializers
 from .services import SignupService, LoginService, UserService, PasswordRecoveryService, ProfileService, UserIdentityService
-from .throttling import SignupThrottling, SignupVerificationThrottling, ResentSignupOtpThrottling, LoginThrottling, PasswordRecoveryThrottling, PasswordRecoveryVerificationThrottling, PasswordRecoveryNewPasswordThrottling, ResentPasswordRecoveryOtpThrottling, LogoutThrottling, AuthenticatedUserThrottling, ChangeNamesThrottling
-from utils.response import Response
-from utils.log import Log
-from utils.platform import Platform
+from common.auth.throttling import SignupThrottling, SignupVerificationThrottling, ResentSignupOtpThrottling, LoginThrottling, PasswordRecoveryThrottling, PasswordRecoveryVerificationThrottling, PasswordRecoveryNewPasswordThrottling, ResentPasswordRecoveryOtpThrottling, LogoutThrottling, AuthenticatedUserThrottling, ChangeNamesThrottling
+from common.utils.response import Response
+from common.debug.log import Log
+from common.platform.platform import Platform
 from constants.tokens import TokenExpiry, CookieToken
-from .permissions import IsIdentitySessionValid
+from common.auth.permissions import IsIdentitySessionValid
 
 
 

@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core.mail import EmailMessage
-from .log import Log
+from ..debug.log import Log
 
 class Mailer:
     @staticmethod

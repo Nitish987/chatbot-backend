@@ -1,6 +1,5 @@
 from django.conf import settings
 from rest_framework import permissions
-from django.core.cache import cache
 from constants.tokens import HeaderToken, TokenType
 from constants.headers import Header
 from .jwt_token import Jwt

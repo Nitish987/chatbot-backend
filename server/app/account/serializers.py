@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import User
-from utils import validators, otp
+from common.utils import otp, validators
 from django.core.cache import cache
 
 

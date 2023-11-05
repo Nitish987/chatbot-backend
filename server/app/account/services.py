@@ -1,12 +1,12 @@
 from django.conf import settings
 from django.core.cache import cache
-from utils import otp, generator, security
-from utils.platform import Platform
-from utils.messenger import Mailer
-from utils.log import Log
-from .jwt_token import Jwt
+from common.utils import otp, generator
+from common.platform.platform import Platform
+from common.utils.messenger import Mailer
+from common.debug.log import Log
+from common.exception.exceptions import UserNotFoundError, NoCacheDataError, NoSessionError
+from common.auth.jwt_token import Jwt
 from .models import User, LoginState
-from .exceptions import UserNotFoundError, NoCacheDataError, NoSessionError
 from django.contrib.auth import authenticate
 from constants.tokens import TokenExpiry, TokenType, CookieToken, HeaderToken
 

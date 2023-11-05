@@ -1,7 +1,8 @@
 import string
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from utils import generator, security
+from common.utils import generator
+from common.platform import security
 from django.conf import settings
 
 

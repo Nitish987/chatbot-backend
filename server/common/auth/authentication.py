@@ -1,6 +1,6 @@
 from rest_framework import authentication
 from rest_framework import exceptions
-from .models import User
+from app.account.models import User
 from .jwt_token import Jwt
 from constants.tokens import TokenType, HeaderToken
 from constants.headers import Header

@@ -114,7 +114,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'app.account.auth.UserAuthentication',
+        'common.auth.authentication.UserAuthentication',
     ),
     'DEFAULT_THROTTLE_RATES': {
         'signup': '10/min',
@@ -129,7 +129,7 @@ REST_FRAMEWORK = {
         'change_names': '3/day',
         'logout': '10/min',
     },
-    'EXCEPTION_HANDLER': 'utils.exceptions.ExceptionHandler'
+    'EXCEPTION_HANDLER': 'common.exception.exception_handler.ExceptionHandler'
 }
 
 # Jwt Config
