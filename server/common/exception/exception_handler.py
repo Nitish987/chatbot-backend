@@ -1,6 +1,6 @@
 from rest_framework.views import exception_handler
 from rest_framework.exceptions import NotAuthenticated, Throttled
-from .response import get_default_response_json
+from ..utils.response import get_default_response_json
 
 def ExceptionHandler(exc, context):
     response = exception_handler(exc, context)
