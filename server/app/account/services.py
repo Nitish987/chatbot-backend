@@ -68,7 +68,7 @@ class UserService:
         return not User.objects.filter(username=username).exists()
     
     @staticmethod
-    def change_names(user: User, first_name: str, last_name: str, username: str):
+    def change_name(user: User, first_name: str, last_name: str, username: str):
         if UserService.check_username_availability(username=username):
             user.username = username
         
@@ -418,6 +418,56 @@ class PasswordRecoveryService:
             'prrt': password_recovery_request_token
         }
 
+
+
+
+class UserIdentityService:
+    '''User Identity Service for verifing user identity'''
+
+    @staticmethod
+    def initiate(user: User):
+        actual_otp, hashed_otp = otp.generate()
+        cache.set(f'{user.uid}:identity', {'otp': hashed_otp})
+
+        identity_otp_token = Jwt.generate(type=TokenType.IDENTITY_OTP, data={'uid': user.uid}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        
+        Mailer.sendEmail(user.email, f'''Your verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {TokenExpiry.OTP_EXPIRE_SECONDS} seconds.''')
+
+        return {
+            'message': f'Enter the otp sent to email {user.email}',
+            'idot': identity_otp_token,
+        }
+
+    @staticmethod
+    def verify_identity_otp_token(request, platform: str):
+        if platform == Platform.MOBILE:
+            _idot = request.META.get(HeaderToken.IDENTITY_OTP_TOKEN)
+        else:
+            _idot = request.COOKIES.get(CookieToken.IDENTITY_OTP_TOKEN)
+        success, payload = Jwt.validate(_idot)
+
+        is_valid = success and payload.get('type') == TokenType.IDENTITY_OTP and payload['data']['uid'] == request.user.uid
+        uid = payload['data']['uid']
+
+        return is_valid, uid
+
+    @staticmethod
+    def retrieve_identity_cache_data(uid):
+        data = cache.get(f'{uid}:identity')
+        if not data:
+            raise NoCacheDataError()
+        return data
+    
+    @staticmethod
+    def delete_identity_cache_data(uid):
+        cache.delete(f'{uid}:identity')
+    
+    @staticmethod
+    def generate_identity_token(user: User):
+        identity_token = Jwt.generate(type=TokenType.IDENTITY, data={'uid': user.uid}, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        return {
+            'idt': identity_token
+        }
 
 
 

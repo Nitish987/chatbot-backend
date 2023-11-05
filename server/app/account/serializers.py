@@ -49,8 +49,8 @@ class SignupSerializer(serializers.ModelSerializer):
         return attrs
 
 
-# Signup Verification
-class SignupVerificationSerializer(serializers.ModelSerializer):
+# Otp Verification
+class VerificationSerializer(serializers.ModelSerializer):
     otp = serializers.CharField(max_length=6)
 
     class Meta:
@@ -135,28 +135,6 @@ class PasswordRecoverySerializer(serializers.ModelSerializer):
         return attrs
 
 
-# Password Recovery Verification
-class PasswordRecoveryVerificationSerializer(serializers.ModelSerializer):
-    otp = serializers.CharField(max_length=6)
-
-    class Meta:
-        model = User
-        fields = ['otp']
-
-    def validate(self, attrs):
-        entered_otp = attrs.get('otp')
-        hashed_otp = self.context.get('hashed_otp')
-
-        # validations checks
-        if validators.is_empty(entered_otp) or not validators.is_equal_length(entered_otp, 6):
-            raise serializers.ValidationError({'otp': 'OTP must be equal to 6 digit number.'})
-        
-        if not otp.compare(entered_otp, hashed_otp):
-            raise serializers.ValidationError({'otp': 'Invalid OTP.'})
-
-        return attrs
-
-
 # Password Recovery New Password
 class PasswordRecoveryNewPassSerializer(serializers.ModelSerializer):
     class Meta:
@@ -199,7 +177,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
 
 
 # Change Username
-class ChangeUserNamesSerializer(serializers.ModelSerializer):
+class ChangeUserNameSerializer(serializers.ModelSerializer):
     username = serializers.CharField()
 
     class Meta:

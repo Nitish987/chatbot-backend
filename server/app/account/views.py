@@ -2,12 +2,13 @@ from rest_framework.views import APIView
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from . import serializers
-from .services import SignupService, LoginService, UserService, PasswordRecoveryService, ProfileService
+from .services import SignupService, LoginService, UserService, PasswordRecoveryService, ProfileService, UserIdentityService
 from .throttling import SignupThrottling, SignupVerificationThrottling, ResentSignupOtpThrottling, LoginThrottling, PasswordRecoveryThrottling, PasswordRecoveryVerificationThrottling, PasswordRecoveryNewPasswordThrottling, ResentPasswordRecoveryOtpThrottling, LogoutThrottling, AuthenticatedUserThrottling, ChangeNamesThrottling
 from utils.response import Response
 from utils.log import Log
 from utils.platform import Platform
 from constants.tokens import TokenExpiry, CookieToken
+from .permissions import IsIdentitySessionValid
 
 
 
@@ -66,7 +67,7 @@ class SignupVerification(APIView):
                 data = SignupService.retrieve_signup_cache_data(id)
 
                 # passing all the data for validation
-                serializer = serializers.SignupVerificationSerializer(data=request.data, context={'hashed_otp': data['otp']})
+                serializer = serializers.VerificationSerializer(data=request.data, context={'hashed_otp': data['otp']})
 
                 if serializer.is_valid():
                     # removing cache and deleting otp from data dict
@@ -206,6 +207,25 @@ class Login(APIView):
 
 
 
+# Logout User
+class Logout(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [LogoutThrottling]
+
+    def post(self, request):
+        try:
+            response = LoginService.logout(request.user)
+
+            # sending response and logout current authenticated user
+            return Response.success(response)
+        except Exception as e:
+            Log.error(e)
+            return Response.something_went_wrong()
+
+
+
+
+
 # Password Recovery
 class PasswordRecovery(APIView):
     throttle_classes = [PasswordRecoveryThrottling]
@@ -260,7 +280,7 @@ class PasswordRecoveryVerification(APIView):
                 data = PasswordRecoveryService.retrieve_recovery_cache_data(uid)
 
                 # passing all the data to serializer from validations
-                serializer = serializers.PasswordRecoveryVerificationSerializer(data=request.data, context={'hashed_otp': data.get('otp')})
+                serializer = serializers.VerificationSerializer(data=request.data, context={'hashed_otp': data.get('otp')})
                 if serializer.is_valid():
                     # deleting cache and otp from data dict
                     PasswordRecoveryService.delete_recovery_cache_data(uid)
@@ -384,6 +404,107 @@ class ResentPasswordRecoveryOtp(APIView):
 
 
 
+# User Identity
+class UserIdentity(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [AuthenticatedUserThrottling]
+
+    def post(self, request):
+        try:
+            content = UserIdentityService.initiate(request.user)
+
+            # sending response
+            response = Response.success({'message': content['message']})
+            response.set_cookie(
+                CookieToken.IDENTITY_TOKEN, 
+                content['idot'], 
+                expires=TokenExpiry.OTP_EXPIRE_SECONDS, 
+                httponly=True, 
+                samesite='None',
+                secure=True
+            )
+            return response
+        except Exception as e:
+            Log.error(e)
+            return Response.something_went_wrong()
+
+
+
+
+
+# User Identity Verification
+class UserIdentityVerification(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [AuthenticatedUserThrottling]
+
+    def post(self, request):
+        try:
+            is_verified, uid = UserIdentityService.verify_identity_otp_token(request, platform=Platform.WEB)
+            if is_verified:
+                data = UserIdentityService.retrieve_identity_cache_data(uid)
+
+                # passing all the data to serializer from validations
+                serializer = serializers.VerificationSerializer(data=request.data, context={'hashed_otp': data.get('otp')})
+                if serializer.is_valid():
+                    UserIdentityService.delete_identity_cache_data(uid)
+
+                    content = UserIdentityService.generate_identity_token(request.user)
+
+                    # sending response
+                    response = Response.success({'message': 'Identity Token'})
+                    response.set_cookie(
+                        CookieToken.IDENTITY_TOKEN, 
+                        content['idt'], 
+                        expires=TokenExpiry.IDENTITY_EXPIRE_SECONDS, 
+                        httponly=True, 
+                        samesite='None',
+                        secure=True
+                    )
+                    response.delete_cookie(CookieToken.IDENTITY_OTP_TOKEN)
+                    return response
+            
+            # sending error response
+            response = Response.errors(serializer.errors)
+            response.delete_cookie(CookieToken.IDENTITY_OTP_TOKEN)
+            return response
+            
+        except Exception as e:
+            return Response.something_went_wrong()
+
+
+
+
+
+# Change Email
+class ChangeEmail(APIView):
+    permission_classes = [IsAuthenticated, IsIdentitySessionValid]
+    throttle_classes = [AuthenticatedUserThrottling]
+
+    def post(self, request):
+        try:
+            pass
+        except Exception as e:
+            return Response.something_went_wrong()
+
+
+
+
+
+# Change Email
+class ChangeEmailVerification(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [AuthenticatedUserThrottling]
+
+    def post(self, request):
+        try:
+            pass
+        except Exception as e:
+            return Response.something_went_wrong()
+
+
+
+
+
 
 # Change Password
 class ChangePassword(APIView):
@@ -413,16 +534,16 @@ class ChangePassword(APIView):
 
 
 # Change User Names
-class ChangeUserNames(APIView):
+class ChangeUserName(APIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [ChangeNamesThrottling]
 
     def post(self, request):
         try:
-            serializer = serializers.ChangeUserNamesSerializer(data=request.data, context={'user': request.user})
+            serializer = serializers.ChangeUserNameSerializer(data=request.data, context={'user': request.user})
 
             if serializer.is_valid():
-                UserService.change_names(
+                UserService.change_name(
                     user=request.user,
                     first_name=request.data.get('first_name'),
                     last_name=request.data.get('last_name'),
@@ -496,24 +617,6 @@ class RefreshToken(APIView):
             Log.error(e)
             return Response.something_went_wrong()
 
-
-
-
-
-# Logout User
-class Logout(APIView):
-    permission_classes = [IsAuthenticated]
-    throttle_classes = [LogoutThrottling]
-
-    def post(self, request):
-        try:
-            response = LoginService.logout(request.user)
-
-            # sending response and logout current authenticated user
-            return Response.success(response)
-        except Exception as e:
-            Log.error(e)
-            return Response.something_went_wrong()
 
 
 
