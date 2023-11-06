@@ -151,6 +151,27 @@ class PasswordRecoveryNewPassSerializer(serializers.ModelSerializer):
         return attrs
 
 
+# Email Change
+class EmailChangeSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(max_length=255)
+
+    class Meta:
+        model = User
+        fields = ['email']
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+
+        # validations checks
+        if not validators.is_email(email):
+            raise serializers.ValidationError({'email': 'Invalid Email'})
+
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({'account': 'Email already in use'})
+
+        return attrs
+
+
 # Change Password
 class ChangePasswordSerializer(serializers.ModelSerializer):
     new_password = serializers.CharField()

@@ -76,6 +76,13 @@ class UserService:
         user.first_name = first_name.lower()
         user.last_name = last_name.lower()
         user.save()
+    
+    @staticmethod
+    def update_email(user: User, email: str):
+        if User.objects.filter(email=email).exists():
+            raise Exception('Email already in use')
+        user.email = email
+        user.save()
 
 
 
@@ -465,10 +472,54 @@ class UserIdentityService:
     
     @staticmethod
     def generate_identity_token(user: User):
-        identity_token = Jwt.generate(type=TokenType.IDENTITY, sub=user.uid, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        identity_token = Jwt.generate(type=TokenType.IDENTITY, sub=user.uid, seconds=TokenExpiry.IDENTITY_EXPIRE_SECONDS)
         return {
             'idt': identity_token
         }
+
+
+
+class EmailChangeService:
+    '''Email Change Service for user'''
+
+    @staticmethod
+    def generate_email_change_token(user: User, email: str):
+        actual_otp, hashed_otp = otp.generate()
+        cache.set(f'{user.uid}:emailchange', {'email': email, 'otp': hashed_otp})
+
+        email_change_token = Jwt.generate(type=TokenType.EMAIL_CHANGE_OTP, sub=user.uid, seconds=TokenExpiry.OTP_EXPIRE_SECONDS)
+        
+        Mailer.sendEmail(email, f'''Your verification OTP is {actual_otp}. Please don't share this OTP to anyone else, valid for {TokenExpiry.OTP_EXPIRE_SECONDS} seconds.''')
+
+        return {
+            'message': f'Enter the otp sent to email {email}',
+            'ecot': email_change_token
+        }
+    
+    @staticmethod
+    def verify_email_otp_token(request, platform: str):
+        if platform == Platform.MOBILE:
+            _ecot = request.META.get(HeaderToken.EMAIL_CHANGE_OTP_TOKEN)
+        else:
+            _ecot = request.COOKIES.get(CookieToken.EMAIL_CHANGE_OTP_TOKEN)
+        success, payload = Jwt.validate(_ecot)
+
+        is_verified = success and payload.get('type') == TokenType.EMAIL_CHANGE_OTP and payload['sub'] == request.user.uid
+        uid = payload['sub'] if is_verified else None
+
+        return is_verified, uid
+
+    @staticmethod
+    def retrieve_email_change_cache_data(uid):
+        data = cache.get(f'{uid}:emailchange')
+        if not data:
+            raise NoCacheDataError()
+        return data
+    
+    @staticmethod
+    def delete_email_change_cache_data(uid):
+        cache.delete(f'{uid}:emailchange')
+
 
 
 

@@ -2,13 +2,13 @@ from rest_framework.views import APIView
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from . import serializers
-from .services import SignupService, LoginService, UserService, PasswordRecoveryService, ProfileService, UserIdentityService
+from .services import SignupService, LoginService, UserService, PasswordRecoveryService, ProfileService, UserIdentityService, EmailChangeService
 from common.auth.throttling import SignupThrottling, SignupVerificationThrottling, ResentSignupOtpThrottling, LoginThrottling, PasswordRecoveryThrottling, PasswordRecoveryVerificationThrottling, PasswordRecoveryNewPasswordThrottling, ResentPasswordRecoveryOtpThrottling, LogoutThrottling, AuthenticatedUserThrottling, ChangeNamesThrottling
 from common.utils.response import Response
 from common.debug.log import Log
 from common.platform.platform import Platform
 from constants.tokens import TokenExpiry, CookieToken
-from common.auth.permissions import IsIdentitySessionValid
+from common.auth.permissions import IsWebIdentitySessionValid
 
 
 
@@ -416,7 +416,7 @@ class UserIdentity(APIView):
             # sending response
             response = Response.success({'message': content['message']})
             response.set_cookie(
-                CookieToken.IDENTITY_TOKEN, 
+                CookieToken.IDENTITY_OTP_TOKEN, 
                 content['idot'], 
                 expires=TokenExpiry.OTP_EXPIRE_SECONDS, 
                 httponly=True, 
@@ -463,12 +463,18 @@ class UserIdentityVerification(APIView):
                     response.delete_cookie(CookieToken.IDENTITY_OTP_TOKEN)
                     return response
             
+                # sending error response
+                response = Response.errors(serializer.errors)
+                response.delete_cookie(CookieToken.IDENTITY_OTP_TOKEN)
+                return response
+            
             # sending error response
-            response = Response.errors(serializer.errors)
+            response = Response.error('Session out! Try again.')
             response.delete_cookie(CookieToken.IDENTITY_OTP_TOKEN)
             return response
             
         except Exception as e:
+            Log.error(e)
             return Response.something_went_wrong()
 
 
@@ -477,13 +483,32 @@ class UserIdentityVerification(APIView):
 
 # Change Email
 class ChangeEmail(APIView):
-    permission_classes = [IsAuthenticated, IsIdentitySessionValid]
+    permission_classes = [IsAuthenticated, IsWebIdentitySessionValid]
     throttle_classes = [AuthenticatedUserThrottling]
 
     def post(self, request):
         try:
-            pass
+            serializer = serializers.EmailChangeSerializer(data=request.data)
+            if serializer.is_valid():
+                content = EmailChangeService.generate_email_change_token(request.user, serializer.validated_data.get('email'))
+
+                # sending response
+                response = Response.success({ 'message': content['message']})
+                response.set_cookie(
+                    CookieToken.EMAIL_CHANGE_OTP_TOKEN,
+                    content['ecot'],
+                    expires=TokenExpiry.OTP_EXPIRE_SECONDS,
+                    httponly=True,
+                    samesite='None',
+                    secure=True
+                )
+                return response
+            
+            # sending error response
+            return Response.errors(serializer.errors)
+        
         except Exception as e:
+            Log.error(e)
             return Response.something_went_wrong()
 
 
@@ -497,10 +522,32 @@ class ChangeEmailVerification(APIView):
 
     def post(self, request):
         try:
-            pass
-        except Exception as e:
-            return Response.something_went_wrong()
+            is_verified, uid = EmailChangeService.verify_email_otp_token(request, platform=Platform.WEB)
+            if is_verified:
+                data = EmailChangeService.retrieve_email_change_cache_data(uid)
 
+                # passing all the data to serializer from validations
+                serializer = serializers.VerificationSerializer(data=request.data, context={'hashed_otp': data.get('otp')})
+                if serializer.is_valid():
+                    UserService.update_email(request.user, data.get('email'))
+
+                    EmailChangeService.delete_email_change_cache_data(uid)
+
+                    response = Response.success({'message': 'Email Changed Successfully'})
+                    response.delete_cookie(CookieToken.EMAIL_CHANGE_OTP_TOKEN)
+                    return response
+                
+                return Response.errors(serializer.errors)
+            
+            response = Response.error('Session Out! Try again.')
+            response.delete_cookie(CookieToken.EMAIL_CHANGE_OTP_TOKEN)
+            return response
+                
+        except Exception as e:
+            Log.error(e)
+            response = Response.something_went_wrong()
+            response.delete_cookie(CookieToken.EMAIL_CHANGE_OTP_TOKEN)
+            return response
 
 
 

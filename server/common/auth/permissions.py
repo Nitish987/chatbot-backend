@@ -1,8 +1,9 @@
 from django.conf import settings
 from rest_framework import permissions
-from constants.tokens import HeaderToken, TokenType
+from constants.tokens import CookieToken, TokenType
 from constants.headers import Header
 from .jwt_token import Jwt
+from ..debug.log import Log
 
 
 # Api Request valid permission
@@ -22,8 +23,8 @@ class IsAccountCreationKeyValid(permissions.BasePermission):
 
 
 # User Account Identity Token Session valid permission
-class IsIdentitySessionValid(permissions.BasePermission):
+class IsWebIdentitySessionValid(permissions.BasePermission):
     def has_permission(self, request, view):
-        idt = request.META.get(HeaderToken.IDENTITY_TOKEN)
+        idt = request.COOKIES.get(CookieToken.IDENTITY_TOKEN)
         is_valid, payload = Jwt.validate(idt)
-        return is_valid and payload['type'] == TokenType.IDENTITY and payload['data']['username'] == request.user.username
+        return is_valid and payload['type'] == TokenType.IDENTITY and payload['sub'] == request.user.uid

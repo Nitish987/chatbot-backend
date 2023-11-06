@@ -7,6 +7,7 @@ class TokenType:
     PASSWORD_RECOVERY_NEW_PASS = 'PRNP'
     IDENTITY_OTP = 'IDO'
     IDENTITY = 'ID'
+    EMAIL_CHANGE_OTP = 'ECO'
 
 
 class HeaderToken:
@@ -20,6 +21,7 @@ class HeaderToken:
     PASSWORD_RECOVERY_NEW_PASS_TOKEN = 'HTTP_PRNPT'
     IDENTITY_OTP_TOKEN = 'HTTP_IDOT'
     IDENTITY_TOKEN = 'HTTP_IDT'
+    EMAIL_CHANGE_OTP_TOKEN = 'HTTP_ECOT'
 
 
 class CookieToken:
@@ -33,6 +35,7 @@ class CookieToken:
     PASSWORD_RECOVERY_NEW_PASS_TOKEN = 'prnpt'
     IDENTITY_OTP_TOKEN = 'idot'
     IDENTITY_TOKEN = 'idt'
+    EMAIL_CHANGE_OTP_TOKEN = 'ecot'
 
 
 class TokenExpiry:
