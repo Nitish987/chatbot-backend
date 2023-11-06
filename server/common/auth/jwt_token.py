@@ -22,7 +22,7 @@ class Jwt:
             return (False, payload)
     
     @staticmethod
-    def generate(type: str, sub: str | None = None, data: dict | None = None, category: int = ACCESS, seconds: int | None = None):
+    def generate(type: str, sub: str = None, data: dict = None, category: int = ACCESS, seconds: int = None):
         '''returns generated JWT token using the given payload type (token for type), data, t_type (token type, can be ACCESS or REFRESH) and seconds''' 
         payload = { 'type': type }
 
