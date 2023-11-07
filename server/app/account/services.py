@@ -291,6 +291,8 @@ class LoginService:
     def logout(user) -> dict:
         # removing msg_token from user
         UserService.update_fcm_token(user=user)
+        # removing refresh token
+        LoginState.objects.get(user=user).delete()
 
         return { 'message': 'Account Logged out Successfully. See you soon.' }
 

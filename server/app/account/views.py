@@ -214,10 +214,12 @@ class Logout(APIView):
 
     def post(self, request):
         try:
-            response = LoginService.logout(request.user)
+            content = LoginService.logout(request.user)
 
             # sending response and logout current authenticated user
-            return Response.success(response)
+            response = Response.success(content)
+            response.delete_cookie(CookieToken.REFRESH_TOKEN)
+            return response
         except Exception as e:
             Log.error(e)
             return Response.something_went_wrong()
@@ -568,9 +570,13 @@ class ChangePassword(APIView):
                 # saving new password
                 UserService.change_password(request.user, serializer.validated_data.get('new_password'))
 
-                return Response.success({
-                    'message': 'Password changed successfully.'
-                })
+                # logout user
+                LoginService.logout(request.user)
+
+                # sending response
+                response = Response.success({'message': 'Password changed successfully.'})
+                response.delete_cookie(CookieToken.REFRESH_TOKEN)
+                return response
 
             return Response.errors(serializer.errors)
         except:
