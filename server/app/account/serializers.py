@@ -203,13 +203,11 @@ class ChangeUserNameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'username', 'password']
+        fields = ['first_name', 'last_name']
 
     def validate(self, attrs):
         first_name = attrs.get('first_name')
         last_name = attrs.get('last_name')
-        username = attrs.get('username')
-        password = attrs.get('password')
 
         # validations checks
         if validators.is_empty(first_name) or not validators.atleast_length(first_name, 3) or validators.contains_script(first_name):
@@ -217,19 +215,6 @@ class ChangeUserNameSerializer(serializers.ModelSerializer):
 
         if validators.is_empty(last_name) or not validators.atleast_length(last_name, 2) or validators.contains_script(last_name):
             raise serializers.ValidationError({'last_name': 'Last name must contains atleast 2 characters.'})
-        
-        if validators.is_empty(username) or ':' in username or '@' in username or validators.contains_script(username):
-            raise serializers.ValidationError({'username': 'Username must not contains ":" or "@".'})
-        
-        if self.context.get('user').username != username:
-            if User.objects.filter(username=username).exists():
-                raise serializers.ValidationError({'username': f'Username {username} already taken.'})
-
-        if not validators.atleast_length(password, 8) or not validators.atmost_length(password, 32) or not validators.is_password(password):
-            raise serializers.ValidationError({'password': 'Password must be of 8 to 32 character, contains atleast one number and one character.'})
-        
-        if not self.context.get('user').check_password(password):
-            raise serializers.ValidationError({'password': 'Invalid Password.'})
         
         return attrs
 

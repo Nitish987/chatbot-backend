@@ -600,7 +600,6 @@ class ChangeUserName(APIView):
                     user=request.user,
                     first_name=request.data.get('first_name'),
                     last_name=request.data.get('last_name'),
-                    username=request.data.get('username'),
                 )
 
                 return Response.success({
@@ -685,7 +684,8 @@ class UserProfile(APIView):
 
             # sending profile in response
             return Response.success(response)
-        except:
+        except Exception as e:
+            Log.error(e)
             return Response.something_went_wrong()
         
     def put(self, request, uid):

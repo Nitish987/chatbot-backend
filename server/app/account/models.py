@@ -1,4 +1,5 @@
 import string
+import random
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from common.utils import generator
@@ -14,7 +15,7 @@ class UserManager(BaseUserManager):
             raise ValueError('Users must have an email address')
 
         # generating uid and username
-        username = generator.generate_username(first_name, last_name)
+        username = generator.generate_username_from_email(email)
 
         # creating user 
         user = self.model(email=self.normalize_email(email), first_name=first_name, last_name=last_name, username=username)

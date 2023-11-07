@@ -14,11 +14,15 @@ def generate_uuid():
 def generate_identity():
     return str(uuid.uuid4())
 
-# returns generated username
-def generate_username(first_name, last_name):
+# returns generated username from name
+def generate_username_from_name(first_name, last_name):
     if first_name != '' and last_name != '':
         return first_name.lower() + '_' + last_name.lower() + '_' + str(random.randint(1000, 9999))
     return first_name.lower() + '_' + str(random.randint(1000, 9999))
+
+# returns generated username from email
+def generate_username_from_email(email: str):
+    return email.split('@')[0] + str(random.randint(1000, 9999))
 
 # returns generated random token
 def generate_token():

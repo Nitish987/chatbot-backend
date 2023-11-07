@@ -69,10 +69,7 @@ class UserService:
         return not User.objects.filter(username=username).exists()
     
     @staticmethod
-    def change_name(user: User, first_name: str, last_name: str, username: str):
-        if UserService.check_username_availability(username=username):
-            user.username = username
-        
+    def change_name(user: User, first_name: str, last_name: str):
         user.first_name = first_name.lower()
         user.last_name = last_name.lower()
         user.save()
@@ -81,6 +78,11 @@ class UserService:
     def update_email(user: User, email: str):
         if User.objects.filter(email=email).exists():
             raise Exception('Email already in use')
+        
+        username = generator.generate_username_from_email(email)
+        if UserService.check_username_availability(username):
+            user.username = username
+        
         user.email = email
         user.save()
 
