@@ -593,7 +593,7 @@ class ChangeUserName(APIView):
 
     def post(self, request):
         try:
-            serializer = serializers.ChangeUserNameSerializer(data=request.data, context={'user': request.user})
+            serializer = serializers.ChangeUserNameSerializer(data=request.data)
 
             if serializer.is_valid():
                 UserService.change_name(
@@ -603,7 +603,7 @@ class ChangeUserName(APIView):
                 )
 
                 return Response.success({
-                    'message': 'Names changed',
+                    'message': 'Name changed Successfully.',
                 })
 
             return Response.errors(serializer.errors)
@@ -687,27 +687,7 @@ class UserProfile(APIView):
         except Exception as e:
             Log.error(e)
             return Response.something_went_wrong()
-        
-    def put(self, request, uid):
-        try:
-            if request.user.uid == uid:
-                serializer = serializers.ProfileUpdateSerializer(data=request.data)
 
-                if serializer.is_valid():
-                    # updating profile
-                    response = ProfileService.update_profile(request.user, serializer.validated_data)
-
-                    # sending response
-                    return Response.success(response)
-
-                # sending error response
-                return Response.errors(serializer.errors)
-            
-            # sending error response
-            return Response.permission_denied()
-        except Exception as e:
-            Log.error(e)
-            return Response.something_went_wrong()
 
 
 

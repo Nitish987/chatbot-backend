@@ -199,8 +199,6 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
 
 # Change Username
 class ChangeUserNameSerializer(serializers.ModelSerializer):
-    username = serializers.CharField()
-
     class Meta:
         model = User
         fields = ['first_name', 'last_name']
@@ -232,39 +230,6 @@ class UserFCMessagingTokenSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'token': 'Invalid Messaging Token.'})
 
         return attrs
-
-
-
-# User Update Profile Photo
-class  ProfileUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['message', 'location', 'interest', 'bio', 'website']
-
-    def validate(self, attrs):
-        message = attrs.get('message')
-        location = attrs.get('location')
-        interest = attrs.get('interest')
-        bio = attrs.get('bio')
-        website = attrs.get('website')
-        
-        if validators.contains_script(message) or not validators.atmost_length(message, 100):
-            raise serializers.ValidationError({'message': 'Invalid Message'})
-
-        if validators.contains_script(location):
-            raise serializers.ValidationError({'location': 'Invalid Location'})
-
-        if validators.contains_script(interest):
-            raise serializers.ValidationError({'interest': 'Invalid Interest'})
-        
-        if validators.contains_script(bio) or not validators.atmost_length(bio, 2000):
-            raise serializers.ValidationError({'bio': 'Invalid Bio'})
-
-        if validators.contains_script(website) or (website != '' and not validators.is_url(website)):
-            raise serializers.ValidationError({'bio': 'Invalid website'})
-
-        return attrs
-
 
 
 # User Update Profile Photo

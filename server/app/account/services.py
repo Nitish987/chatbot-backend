@@ -549,28 +549,6 @@ class ProfileService:
         }
 
         return response
-
-    @staticmethod
-    def update_profile(user: User, data) -> dict:
-        user.message = data.get('message')
-        user.location = data.get('location').lower()
-        user.interest = data.get('interest')
-        user.bio = data.get('bio')
-        user.website = data.get('website')
-
-        # saving profile
-        user.save()
-
-        return {
-            'type': user.acc_type,
-            'profile': {
-                'uid': user.uid,
-                'name': user.full_name,
-                'username': user.username,
-                'photo': user.photo.url,
-                'gender': user.gender
-            },
-        }
     
     @staticmethod
     def update_profile_photo(user: User, data) -> dict:
