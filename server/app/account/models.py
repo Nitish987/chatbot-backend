@@ -73,7 +73,7 @@ class UserManager(BaseUserManager):
 # user model
 class User(AbstractBaseUser):
     '''User Model Class'''
-    uid = models.CharField(default=generator.generate_identity, max_length=36, unique=True, primary_key=True, editable=False)
+    uid = models.CharField(default=generator.generate_uuid, max_length=36, unique=True, primary_key=True, editable=False)
     first_name = models.CharField(default='', max_length=255)
     last_name = models.CharField(default='', max_length=255)
     email = models.EmailField(default='', max_length=255, unique=True)

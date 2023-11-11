@@ -537,7 +537,17 @@ class ProfileService:
         user = UserService.get_user(uid)
 
         # profile json response
-        response = {
+        return ProfileService.to_json(user)
+    
+    @staticmethod
+    def update_profile_photo(user: User, data) -> dict:
+        user.photo = data.get('photo')
+        user.save()
+        return { 'photo': user.photo.url }
+    
+    @staticmethod
+    def to_json(user: User):
+        return {
             'type': user.acc_type,
             'profile': {
                 'uid': user.uid,
@@ -545,13 +555,5 @@ class ProfileService:
                 'username': user.username,
                 'photo': user.photo.url,
                 'gender': user.gender
-            },
+            }
         }
-
-        return response
-    
-    @staticmethod
-    def update_profile_photo(user: User, data) -> dict:
-        user.photo = data.get('photo')
-        user.save()
-        return { 'photo': user.photo.url }
