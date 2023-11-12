@@ -1,5 +1,6 @@
 from .models import Project
 from ..account.services import ProfileService
+from common.debug.log import Log
 
 
 
@@ -37,6 +38,7 @@ class ProjectService:
             'user': ProfileService.to_json(project.user),
             'name': project.name,
             'description': project.description,
-            'envtype': project.envtype
+            'envtype': project.envtype,
+            'createdon': project.created_on
         }
     
