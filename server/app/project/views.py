@@ -11,7 +11,7 @@ from .services import ProjectService
 
 # User Project
 class UserProject(APIView):
-    permission_class = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     throttle_classes = [AuthenticatedUserThrottling]
 
     def post(self, request):
