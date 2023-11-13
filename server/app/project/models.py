@@ -11,3 +11,14 @@ class Project(models.Model):
     description = models.CharField(default='', max_length=200)
     envtype = models.CharField(default='DEVELOPMENT', choices=(('DEVELOPMENT', 'Development'), ('PRODUCTION', 'Production')), max_length=20)
     created_on = models.DateTimeField(auto_now=True)
+
+
+
+# Project Apis Model
+class ProjectApi(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    product = models.ForeignKey('product.Product', on_delete=models.DO_NOTHING)
+    api_key = models.CharField(default='', max_length=50)
+    host = models.JSONField(default=list)
+    created_on = models.DateTimeField(auto_now=True)
+    

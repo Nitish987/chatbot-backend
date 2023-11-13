@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Project
+from .models import Project, ProjectApi
+from ..product.models import Product
 from common.utils import validators
 from common.debug.log import Log
 
@@ -45,5 +46,30 @@ class UpdateProjectSerializer(serializers.ModelSerializer):
         
         if envtype not in ['DEVELOPMENT', 'PRODUCTION']:
             raise serializers.ValidationError({'envtype': 'Invalid Environment Type.'})
+
+        return attrs
+
+
+
+
+
+# Add Project Api Serializer
+class AddProjectApiSerializer(serializers.ModelSerializer):
+    product_id = serializers.IntegerField()
+    host = serializers.CharField()
+
+    class Meta:
+        model = ProjectApi
+        fields = ['product_id', 'host']
+    
+    def validate(self, attrs):
+        product_id = attrs.get('product_id')
+        host = attrs.get('host')
+
+        if not Product.objects.filter(id=product_id).exists():
+            raise serializers.ValidationError({'ids': 'Invalid product specified.'})
+        
+        if host is None:
+            raise serializers.ValidationError({'host': 'Invalid host list.'})
 
         return attrs
