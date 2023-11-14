@@ -60,7 +60,13 @@ class ProjectApiService:
         api_key = Keys.GENERATED_API_KEY_PREFIX + generator.generate_password_key(36)
         api_key = AES256(settings.SERVER_ENC_KEY).encrypt(api_key)
         product = Product.objects.get(id=data.get('product_id'))
-        project_api = Project.objects.create(project=project, api_key=api_key, product=product, **data)
+        hosts_list = str(data.get('host')).split(',')
+        project_api = ProjectApi.objects.create(
+            project=project, 
+            api_key=api_key, 
+            product=product, 
+            host={'urls': hosts_list}
+        )
         return ProjectApiService.to_json(project_api)
     
     @staticmethod

@@ -12,6 +12,9 @@ class Project(models.Model):
     envtype = models.CharField(default='DEVELOPMENT', choices=(('DEVELOPMENT', 'Development'), ('PRODUCTION', 'Production')), max_length=20)
     created_on = models.DateTimeField(auto_now=True)
 
+    def __str__(self) -> str:
+        return self.name
+
 
 
 # Project Apis Model
@@ -19,6 +22,9 @@ class ProjectApi(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     product = models.ForeignKey('product.Product', on_delete=models.DO_NOTHING)
     api_key = models.CharField(default='', max_length=50)
-    host = models.JSONField(default=list)
+    host = models.JSONField(default=dict)
     created_on = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return self.product.name + " | " + self.project.name + " - API"
     
