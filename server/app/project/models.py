@@ -27,5 +27,5 @@ class ProjectApi(models.Model):
     created_on = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return self.product.name + " | " + self.project.name + " - API"
+        return self.product + " | " + self.project.name + " - API"
     
