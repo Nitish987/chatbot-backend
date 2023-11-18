@@ -135,3 +135,28 @@ class UserProjectApi(APIView):
         except Exception as e:
             Log.error(e)
             return Response.something_went_wrong()
+
+
+
+
+# User Project Api View
+class UserProjectApiView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [AuthenticatedUserThrottling]
+
+    def get(self, request, project_id):
+        try:
+            id = request.query_params.get('id')
+            if id is None:
+                return Response.error('Project API Id required.')
+
+            api_key = ProjectApiService.view_project_api(request.user, project_id, id)
+
+            # success response
+            return Response.success({
+                'message': 'Project view successfully.',
+                'apikey': api_key
+            })
+        except Exception as e:
+            Log.error(e)
+            return Response.something_went_wrong()

@@ -77,6 +77,13 @@ class ProjectApiService:
         return project_apis
 
     @staticmethod
+    def view_project_api(user, project_id, project_api_id):
+        project = Project.objects.get(id=project_id, user=user)
+        project_api = ProjectApi.objects.get(id=project_api_id, project=project)
+        api_key = AES256(settings.SERVER_ENC_KEY).decrypt(project_api.api_key)
+        return api_key
+
+    @staticmethod
     def delete_project_api(user, project_id, project_api_id):
         project = Project.objects.get(id=project_id, user=user)
         ProjectApi.objects.get(id=project_api_id, project=project).delete()
