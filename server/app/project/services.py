@@ -22,6 +22,7 @@ class ProjectService:
     @staticmethod
     def update_project(id: str, data: dict):
         project = Project.objects.get(id=id)
+        project.name = data.get('name')
         project.description = data.get('description')
         project.envtype = data.get('envtype')
         project.save()

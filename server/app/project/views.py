@@ -1,7 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from common.debug.log import Log
-from common.platform import platform
 from common.utils.response import Response
 from common.auth.throttling import AuthenticatedUserThrottling
 from . import serializers
