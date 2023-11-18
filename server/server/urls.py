@@ -11,7 +11,6 @@ urlpatterns = [
 
     # API
     path('api/account/', include('app.account.urls')),
-    path('api/product/', include('app.product.urls')),
     path('api/project/', include('app.project.urls')),
 ]
 

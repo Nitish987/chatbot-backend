@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Project, ProjectApi
-from ..product.models import Product
+from constants.products import Product
 from common.utils import validators
 from common.debug.log import Log
 
@@ -59,18 +59,17 @@ class UpdateProjectSerializer(serializers.ModelSerializer):
 
 # Add Project Api Serializer
 class AddProjectApiSerializer(serializers.ModelSerializer):
-    product_id = serializers.IntegerField()
     host = serializers.CharField()
 
     class Meta:
         model = ProjectApi
-        fields = ['product_id', 'host']
+        fields = ['product', 'host']
     
     def validate(self, attrs):
-        product_id = attrs.get('product_id')
+        product = attrs.get('product')
         host = attrs.get('host')
 
-        if not Product.objects.filter(id=product_id).exists():
+        if product not in Product.products():
             raise serializers.ValidationError({'ids': 'Invalid product specified.'})
         
         if host is None:

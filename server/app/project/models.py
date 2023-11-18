@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from common.utils import generator
+from constants.products import Product
 
 
 # Project Model
@@ -20,7 +21,7 @@ class Project(models.Model):
 # Project Apis Model
 class ProjectApi(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    product = models.ForeignKey('product.Product', on_delete=models.DO_NOTHING)
+    product = models.CharField(default=Product.CHATBOT, choices=Product.products_model_choices(), max_length=20)
     api_key = models.CharField(default='', max_length=50)
     host = models.JSONField(default=dict)
     created_on = models.DateTimeField(auto_now=True)

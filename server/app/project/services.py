@@ -5,8 +5,6 @@ from common.utils import generator
 from constants.keys import Keys
 from common.platform.security import AES256
 from django.conf import settings
-from ..product.services import ProductService
-from ..product.models import Product
 
 
 
@@ -60,7 +58,7 @@ class ProjectApiService:
         project = Project.objects.get(id=project_id, user=user)
         api_key = Keys.GENERATED_API_KEY_PREFIX + generator.generate_password_key(36)
         api_key = AES256(settings.SERVER_ENC_KEY).encrypt(api_key)
-        product = Product.objects.get(id=data.get('product_id'))
+        product = data.get('product')
         hosts_list = str(data.get('host')).split(',')
         project_api = ProjectApi.objects.create(
             project=project, 
@@ -94,7 +92,7 @@ class ProjectApiService:
         return {
             'id': project_api.pk,
             'project': ProjectService.to_json(project_api.project),
-            'product': ProductService.to_json(project_api.product),
+            'product': project_api.product,
             'apikey': project_api.api_key,
             'createdon': project_api.created_on
         }
