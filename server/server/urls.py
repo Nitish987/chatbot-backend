@@ -12,6 +12,7 @@ urlpatterns = [
     # API
     path('api/account/', include('app.account.urls')),
     path('api/project/', include('app.project.urls')),
+    path('api/apis/', include('app.apis.urls')),
 ]
 
 if settings.DEBUG:
