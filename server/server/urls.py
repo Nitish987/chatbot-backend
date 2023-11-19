@@ -13,6 +13,8 @@ urlpatterns = [
     path('api/account/', include('app.account.urls')),
     path('api/project/', include('app.project.urls')),
     path('api/apis/', include('app.apis.urls')),
+    path('api/chatbot/', include('app.chatbot.urls')),
+    path('api/emforms/', include('app.emforms.urls')),
 ]
 
 if settings.DEBUG:
