@@ -2,8 +2,8 @@ from django.db import models
 from common.platform.products import Product
 
 
-# Project Apis Model
-class ProjectApi(models.Model):
+# Apis Model
+class Api(models.Model):
     project = models.ForeignKey('project.Project', on_delete=models.CASCADE)
     product = models.CharField(default=Product.chatbot.name, choices=Product.products_model_choices(), max_length=20)
     type = models.CharField(default=Product.chatbot.types[0], choices=Product.product_types_model_choices(), max_length=20)

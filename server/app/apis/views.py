@@ -4,14 +4,14 @@ from common.debug.log import Log
 from common.utils.response import Response
 from common.auth.throttling import AuthenticatedUserThrottling
 from . import serializers
-from .services import ProjectApiService
+from .services import ApiService
 
 
 
 
 
-# User Project Api
-class UserProjectApi(APIView):
+# Project Api
+class ProjectApi(APIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [AuthenticatedUserThrottling]
 
@@ -19,7 +19,7 @@ class UserProjectApi(APIView):
         try:
             serializer = serializers.AddProjectApiSerializer(data=request.data)
             if serializer.is_valid():
-                project_api = ProjectApiService.create_project_api(request.user, project_id, serializer.validated_data)
+                project_api = ApiService.create_project_api(request.user, project_id, serializer.validated_data)
 
                 # success response
                 return Response.success({
@@ -35,7 +35,7 @@ class UserProjectApi(APIView):
         
     def get(self, request, project_id):
         try:
-            project_apis = ProjectApiService.list_project_apis(request.user, project_id)
+            project_apis = ApiService.list_project_apis(request.user, project_id)
 
             # succcess response
             return Response.success({
@@ -52,7 +52,7 @@ class UserProjectApi(APIView):
             if id is None:
                 return Response.error('Project API Id required.')
 
-            ProjectApiService.delete_project_api(request.user, project_id, id)
+            ApiService.delete_project_api(request.user, project_id, id)
 
             # success response
             return Response.success({'message': 'Project deleted successfully.'})
@@ -63,8 +63,8 @@ class UserProjectApi(APIView):
 
 
 
-# User Project Api View
-class UserProjectApiView(APIView):
+# Project Api View
+class ProjectApiView(APIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [AuthenticatedUserThrottling]
 
@@ -74,7 +74,7 @@ class UserProjectApiView(APIView):
             if id is None:
                 return Response.error('Project API Id required.')
 
-            api_key = ProjectApiService.view_project_api(request.user, project_id, id)
+            api_key = ApiService.view_project_api(request.user, project_id, id)
 
             # success response
             return Response.success({

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ProjectApi
+from .models import Api
 from common.platform.products import Product
 from common.utils import validators
 from common.debug.log import Log
@@ -7,11 +7,11 @@ from common.debug.log import Log
 
 
 # Add Project Api Serializer
-class AddProjectApiSerializer(serializers.ModelSerializer):
+class AddApiSerializer(serializers.ModelSerializer):
     host = serializers.CharField()
 
     class Meta:
-        model = ProjectApi
+        model = Api
         fields = ['product', 'type', 'host']
     
     def validate(self, attrs):
