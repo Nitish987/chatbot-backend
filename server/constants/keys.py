@@ -1,2 +1,3 @@
 class Keys:
     GENERATED_API_KEY_PREFIX = 'C_'
+    GENERATED_API_KEY_SIZE = 36

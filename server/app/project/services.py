@@ -56,14 +56,14 @@ class ProjectApiService:
     @staticmethod
     def create_project_api(user, project_id: str, data: dict):
         project = Project.objects.get(id=project_id, user=user)
-        api_key = Keys.GENERATED_API_KEY_PREFIX + generator.generate_password_key(36)
+        api_key = Keys.GENERATED_API_KEY_PREFIX + generator.generate_password_key(Keys.GENERATED_API_KEY_SIZE)
         api_key = AES256(settings.SERVER_ENC_KEY).encrypt(api_key)
-        product = data.get('product')
         hosts_list = str(data.get('host')).split(',')
         project_api = ProjectApi.objects.create(
             project=project, 
             api_key=api_key, 
-            product=product, 
+            product=data.get('product'), 
+            type=data.get('type'),
             host={'urls': hosts_list}
         )
         return ProjectApiService.to_json(project_api)
@@ -93,6 +93,7 @@ class ProjectApiService:
             'id': project_api.pk,
             'project': ProjectService.to_json(project_api.project),
             'product': project_api.product,
+            'type': project_api.type,
             'apikey': project_api.api_key,
             'createdon': project_api.created_on
         }
