@@ -3,6 +3,7 @@ from .models import Chatbot
 from common.utils import validators
 from common.debug.log import Log
 from ..apis.models import Api
+from common.platform.products import Product
 
 
 
@@ -25,6 +26,9 @@ class AddChatbotConfigSerializer(serializers.ModelSerializer):
         if not Api.objects.filter(id=api_id, user=user).exists():
             raise serializers.ValidationError({'api': 'Permission denied.'})
         
+        if Api.objects.get(id=api_id, user=user).product != Product.chatbot.name:
+            raise serializers.ValidationError({'api': 'Invalid api for product.'})
+
         if config is None:
             raise serializers.ValidationError({'config': 'Invalid configuration.'})
         

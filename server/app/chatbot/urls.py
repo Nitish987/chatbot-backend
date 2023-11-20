@@ -2,4 +2,6 @@ from django.urls import path
 from . import views
 
 
-urlpatterns = []
+urlpatterns = [
+    path('v1/config/', views.ChatbotConfig.as_view(), name='chatbot-config'),
+]

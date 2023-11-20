@@ -1,3 +1,49 @@
-from django.shortcuts import render
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from common.debug.log import Log
+from common.utils.response import Response
+from common.auth.throttling import AuthenticatedUserThrottling
+from . import serializers
+from .services import ChatbotService
 
-# Create your views here.
+
+
+# Chatbot Config
+class ChatbotConfig(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [AuthenticatedUserThrottling]
+
+    def post(self, request):
+        try:
+            serializer = serializers.AddChatbotConfigSerializer(data=request.data)
+            if serializer.is_valid():
+                config = ChatbotService.configure(request.user, serializer.validated_data)
+
+                # success response
+                return Response.success({
+                    'message': 'Chatbot Configured.', 
+                    'config': config
+                })
+
+            # error response
+            return Response.errors(serializer.errors)
+        except Exception as e:
+            Log.error(e)
+            return Response.something_went_wrong()
+    
+    def get(self, request):
+        try:
+            config = ChatbotService.get_configuration(
+                user=request.user,
+                api_id=request.query_params.get('api_id'),
+                chatbot_id=request.query_params.get('chatbot_id')
+            )
+
+            # success response
+            return Response.success({
+                'message': 'Chatbot Configured.', 
+                'config': config
+            })
+        except Exception as e:
+            Log.error(e)
+            return Response.something_went_wrong()
