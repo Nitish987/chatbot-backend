@@ -7,17 +7,18 @@ from common.platform.products import Product
 
 class ChatbotService:
     @staticmethod
-    def configure(user, data):
-        api = Api.objects.get(id=data.get('api_id'), user=user)
+    def configure(data):
+        api = Api.objects.get(id=data.get('api_id'))
         return Chatbot.objects.create(
             api=api,
+            type=api.type,
             config=data.get('config'),
             data=data.get('data')
         )
     
     @staticmethod
-    def get_configuration(user, api_id, chatbot_id):
-        api = Api.objects.get(id=api_id, user=user)
+    def get_configuration(api_id, chatbot_id):
+        api = Api.objects.get(id=api_id)
         chatbot = Chatbot.objects.get(id=chatbot_id, api=api)
         return ChatbotService.to_json(chatbot)
     

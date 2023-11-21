@@ -15,9 +15,9 @@ class ChatbotConfig(APIView):
 
     def post(self, request):
         try:
-            serializer = serializers.AddChatbotConfigSerializer(data=request.data)
+            serializer = serializers.AddChatbotConfigSerializer(data=request.data, context={'user': request.user})
             if serializer.is_valid():
-                config = ChatbotService.configure(request.user, serializer.validated_data)
+                config = ChatbotService.configure(serializer.validated_data)
 
                 # success response
                 return Response.success({
@@ -34,7 +34,6 @@ class ChatbotConfig(APIView):
     def get(self, request):
         try:
             config = ChatbotService.get_configuration(
-                user=request.user,
                 api_id=request.query_params.get('api_id'),
                 chatbot_id=request.query_params.get('chatbot_id')
             )

@@ -10,8 +10,6 @@ from common.platform.products import Product
 # Add Chatbot Configuration Serializer
 class AddChatbotConfigSerializer(serializers.ModelSerializer):
     api_id = serializers.IntegerField()
-    config = serializers.CharField()
-    data = serializers.CharField()
 
     class Meta:
         model = Chatbot
@@ -23,10 +21,11 @@ class AddChatbotConfigSerializer(serializers.ModelSerializer):
         data = attrs.get('data')
         user = self.context.get('user')
 
-        if not Api.objects.filter(id=api_id, user=user).exists():
-            raise serializers.ValidationError({'api': 'Permission denied.'})
+        if not Api.objects.filter(id=api_id).exists():
+            raise serializers.ValidationError({'api': 'No API found.'})
         
-        if Api.objects.get(id=api_id, user=user).product != Product.chatbot.name:
+        api = Api.objects.get(id=api_id)
+        if api.project.user != user or api.product != Product.chatbot.name:
             raise serializers.ValidationError({'api': 'Invalid api for product.'})
 
         if config is None:
