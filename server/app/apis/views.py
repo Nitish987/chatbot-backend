@@ -17,7 +17,7 @@ class ProjectApi(APIView):
 
     def post(self, request, project_id):
         try:
-            serializer = serializers.AddProjectApiSerializer(data=request.data)
+            serializer = serializers.AddApiSerializer(data=request.data)
             if serializer.is_valid():
                 project_api = ApiService.create_project_api(request.user, project_id, serializer.validated_data)
 

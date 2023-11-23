@@ -2,6 +2,7 @@ from .models import Chatbot
 from ..apis.models import Api
 from ..apis.services import ApiService
 from common.platform.products import Product
+from common.debug.log import Log
 
 
 
@@ -9,12 +10,13 @@ class ChatbotService:
     @staticmethod
     def configure(data):
         api = Api.objects.get(id=data.get('api_id'))
-        return Chatbot.objects.create(
+        chatbot = Chatbot.objects.create(
             api=api,
             type=api.type,
             config=data.get('config'),
             data=data.get('data')
         )
+        return ChatbotService.to_json(chatbot)
     
     @staticmethod
     def get_configuration(api_id, chatbot_id):
