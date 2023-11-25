@@ -10,7 +10,8 @@ class Project(models.Model):
     name = models.CharField(default='', max_length=50)
     description = models.CharField(default='', max_length=200)
     envtype = models.CharField(default='DEVELOPMENT', choices=(('DEVELOPMENT', 'Development'), ('PRODUCTION', 'Production')), max_length=20)
-    created_on = models.DateTimeField(auto_now=True)
+    updated_on = models.DateTimeField(auto_now=True)
+    created_on = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self) -> str:
         return self.name

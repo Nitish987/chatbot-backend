@@ -28,10 +28,10 @@ class AddChatbotConfigSerializer(serializers.ModelSerializer):
         if api.project.user != user or api.product != Product.chatbot.name:
             raise serializers.ValidationError({'api': 'Invalid api for product.'})
 
-        if config is None:
+        if config is None or not isinstance(config, dict):
             raise serializers.ValidationError({'config': 'Invalid configuration.'})
         
-        if data is None:
+        if data is None or not isinstance(data, dict):
             raise serializers.ValidationError({'data': 'Invalid data.'})
 
         return attrs

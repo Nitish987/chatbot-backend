@@ -52,7 +52,7 @@ class UserProject(APIView):
             
             serializer = serializers.UpdateProjectSerializer(data=request.data)
             if serializer.is_valid():
-                project = ProjectService.update_project(id, serializer.validated_data)
+                project = ProjectService.update_project(request.user, id, serializer.validated_data)
 
                 # success response
                 return Response.success({
@@ -72,7 +72,7 @@ class UserProject(APIView):
             if id is None:
                 return Response.error('Project Id required.')
 
-            ProjectService.delete_project(id)
+            ProjectService.delete_project(request.user, id)
 
             # success response
             return Response.success({'message': 'Project deleted successfully.'})

@@ -14,8 +14,8 @@ class ProjectService:
         return ProjectService.to_json(project)
     
     @staticmethod
-    def update_project(id: str, data: dict):
-        project = Project.objects.get(id=id)
+    def update_project(user, id: str, data: dict):
+        project = Project.objects.get(user=user, id=id)
         project.name = data.get('name')
         project.description = data.get('description')
         project.envtype = data.get('envtype')
@@ -29,8 +29,8 @@ class ProjectService:
         return projects
 
     @staticmethod
-    def delete_project(id: str):
-        Project.objects.get(id=id).delete()
+    def delete_project(user, id: str):
+        Project.objects.get(user=user, id=id).delete()
     
     @staticmethod
     def to_json(project: Project):
