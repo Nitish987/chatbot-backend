@@ -251,7 +251,13 @@ class LoginService:
                 category=Jwt.REFRESH,
                 seconds=TokenExpiry.REFRESH_EXPIRE_SECONDS
             )
-            LoginState.objects.create(user=user, session_id=session_id, refresh_token=refresh_token)
+            if login_state.exists():
+                lst = login_state[0]
+                lst.session_id = session_id
+                lst.refresh_token = refresh_token
+                lst.save()
+            else:
+                LoginState.objects.create(user=user, session_id=session_id, refresh_token=refresh_token)
 
         # getting user encryption key
         enc_key = UserService.get_user_enc_key(user)
