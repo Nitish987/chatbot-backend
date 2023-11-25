@@ -141,7 +141,7 @@ REST_FRAMEWORK = {
 JWT_ACCESS_SECRET = getenv('JWT_ACCESS_SECRET')
 JWT_REFRESH_SECRET = getenv('JWT_REFRESH_SECRET')
 
-# Softauth api key
+# App api key
 
 APP_API_KEY = getenv('APP_API_KEY')
 
