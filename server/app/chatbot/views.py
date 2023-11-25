@@ -15,6 +15,7 @@ class ChatbotConfig(APIView):
 
     def post(self, request):
         try:
+            Log.info(request.data)
             serializer = serializers.AddChatbotConfigSerializer(data=request.data, context={'user': request.user})
             if serializer.is_valid():
                 config = ChatbotService.configure(serializer.validated_data)

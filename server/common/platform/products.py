@@ -32,6 +32,13 @@ class _Chatbot:
     @property
     def models(self) -> dict:
         return self.__models
+    
+    @property
+    def models_list(self) -> tuple:
+        models = []
+        for engine in self.engines:
+            models.append(self.models.get(engine))
+        return tuple(models)
 
     @property
     def types_model_choices(self) -> tuple:

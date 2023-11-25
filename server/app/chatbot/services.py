@@ -10,12 +10,7 @@ class ChatbotService:
     @staticmethod
     def configure(data):
         api = Api.objects.get(id=data.get('api_id'))
-        chatbot = Chatbot.objects.create(
-            api=api,
-            type=api.type,
-            config=data.get('config'),
-            data=data.get('data')
-        )
+        chatbot = Chatbot.objects.create(api=api, type=api.type, **data)
         return ChatbotService.to_json(chatbot)
     
     @staticmethod
@@ -29,6 +24,15 @@ class ChatbotService:
         return {
             'id': chatbot.pk,
             'api': ApiService.to_json(chatbot.api),
+            'name': chatbot.name,
+            'photo': chatbot.photo.url,
+            'greeting': chatbot.greeting,
+            'engine': chatbot.engine,
+            'model': chatbot.model,
+            'sysPrompt': chatbot.sys_prompt,
+            'knowledge': chatbot.knowledge,
             'config': chatbot.config,
-            'data': chatbot.data
+            'data': chatbot.data,
+            'update_on': chatbot.updated_on,
+            'created_on': chatbot.created_on
         }
