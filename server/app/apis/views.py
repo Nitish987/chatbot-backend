@@ -19,13 +19,17 @@ class ProjectApi(APIView):
         try:
             serializer = serializers.AddApiSerializer(data=request.data)
             if serializer.is_valid():
-                project_api = ApiService.create_project_api(request.user, project_id, serializer.validated_data)
+                try:
+                    project_api = ApiService.create_project_api(request.user, project_id, serializer.validated_data)
 
-                # success response
-                return Response.success({
-                    'message': 'Project api created successfully.', 
-                    'projectapi': project_api
-                })
+                    # success response
+                    return Response.success({
+                        'message': 'Project api created successfully.', 
+                        'projectapi': project_api
+                    })
+                except Exception as e:
+                    Log.error(e)
+                    return Response.error(str(e))
 
             # error response
             return Response.errors(serializer.errors)

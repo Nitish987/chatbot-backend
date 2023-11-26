@@ -15,7 +15,7 @@ class UserProject(APIView):
 
     def post(self, request):
         try:
-            serializer = serializers.AddProjectSerializer(data=request.data)
+            serializer = serializers.ProjectSerializer(data=request.data)
             if serializer.is_valid():
                 project = ProjectService.create_project(request.user, serializer.validated_data)
 
@@ -50,7 +50,7 @@ class UserProject(APIView):
             if id is None:
                 return Response.error('Project Id required.')
             
-            serializer = serializers.UpdateProjectSerializer(data=request.data)
+            serializer = serializers.ProjectSerializer(data=request.data)
             if serializer.is_valid():
                 project = ProjectService.update_project(request.user, id, serializer.validated_data)
 

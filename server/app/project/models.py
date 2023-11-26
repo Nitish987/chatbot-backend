@@ -10,6 +10,7 @@ class Project(models.Model):
     name = models.CharField(default='', max_length=50)
     description = models.CharField(default='', max_length=200)
     envtype = models.CharField(default='DEVELOPMENT', choices=(('DEVELOPMENT', 'Development'), ('PRODUCTION', 'Production')), max_length=20)
+    host = models.JSONField(default=dict)
     updated_on = models.DateTimeField(auto_now=True)
     created_on = models.DateTimeField(auto_now_add=True, null=True)
 

@@ -28,3 +28,11 @@ class IsWebIdentitySessionValid(permissions.BasePermission):
         idt = request.COOKIES.get(CookieToken.IDENTITY_TOKEN)
         is_valid, payload = Jwt.validate(idt)
         return is_valid and payload['type'] == TokenType.IDENTITY and payload['sub'] == request.user.uid
+
+
+
+# External Auth valid permission
+class IsExternalAuthenticated(permissions.BasePermission):
+    def has_permission(self, request, view):
+        key = request.META.get(Header.EXTERNAL_SERVER_API_KEY)
+        return key == settings.EXTERNAL_SERVER_API_KEY

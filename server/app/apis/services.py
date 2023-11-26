@@ -17,15 +17,17 @@ class ApiService:
     @staticmethod
     def create_project_api(user, project_id: str, data: dict):
         project = Project.objects.get(id=project_id, user=user)
+
+        if Api.objects.filter(project=project, product=data.get('product')).exists():
+            raise Exception('Your can create only one Api for one Product in each Project.')
+
         api_key = Keys.GENERATED_API_KEY_PREFIX + generator.generate_password_key(Keys.GENERATED_API_KEY_SIZE)
         api_key = AES256(settings.SERVER_ENC_KEY).encrypt(api_key)
-        hosts_list = str(data.get('host')).split(',')
         project_api = Api.objects.create(
             project=project, 
             api_key=api_key, 
             product=data.get('product'), 
-            type=data.get('type'),
-            host={'urls': hosts_list}
+            type=data.get('type')
         )
         return ApiService.to_json(project_api)
     
@@ -56,5 +58,6 @@ class ApiService:
             'product': project_api.product,
             'type': project_api.type,
             'apikey': project_api.api_key,
+            'updatedon': project_api.updated_on,
             'createdon': project_api.created_on
         }

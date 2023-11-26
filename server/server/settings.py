@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'app.apis',
     'app.chatbot',
     'app.emforms',
+    'app.external',
 ]
 
 MIDDLEWARE = [
@@ -152,6 +153,10 @@ ACCOUNT_CREATION_KEY = getenv('ACCOUNT_CREATION_KEY')
 # Encryption Key
 
 SERVER_ENC_KEY = getenv('SERVER_ENC_KEY')
+
+# External api key
+
+EXTERNAL_SERVER_API_KEY = getenv('EXTERNAL_SERVER_API_KEY')
 
 # Cors Configuration
 
