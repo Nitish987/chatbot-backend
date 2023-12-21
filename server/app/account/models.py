@@ -123,6 +123,6 @@ class User(AbstractBaseUser):
 class LoginState(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     session_id = models.CharField(default='', max_length=100, unique=True)
-    refresh_token = models.CharField(default='', max_length=36, unique=True)
+    refresh_token = models.TextField(default='', unique=True)
     updated_on = models.DateTimeField(auto_now=True)
     created_on = models.DateTimeField(auto_now_add=True, null=True)
