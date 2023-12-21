@@ -36,11 +36,6 @@ class ProjectService:
         projects_query = Project.objects.filter(user=user)
         projects = [ProjectService.to_json(project) for project in projects_query]
         return projects
-    
-    @staticmethod
-    def get_project(id):
-        project = Project.objects.get(id=id)
-        return ProjectService.to_json(project)
 
     @staticmethod
     def delete_project(user, id: str):

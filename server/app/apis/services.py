@@ -51,13 +51,17 @@ class ApiService:
         Api.objects.get(id=project_api_id, project=project).delete()
     
     @staticmethod
-    def to_json(project_api: Api):
+    def to_json(project_api: Api, decrypt_api=False):
+        api_key = project_api.api_key
+        if decrypt_api:
+            api_key = AES256(settings.SERVER_ENC_KEY).decrypt(project_api.api_key)
+
         return {
             'id': project_api.pk,
             'project': ProjectService.to_json(project_api.project),
             'product': project_api.product,
             'type': project_api.type,
-            'apikey': project_api.api_key,
+            'apikey': api_key,
             'updatedon': project_api.updated_on,
             'createdon': project_api.created_on
         }

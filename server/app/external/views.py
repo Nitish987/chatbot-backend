@@ -6,8 +6,7 @@ from .services import ExternalExportService
 
 
 
-# External Api Server data Validation API
-class ExternalExport(APIView):
+class ExternalExportProject(APIView):
     permission_classes = [IsExternalAuthenticated]
 
     def get(self, request):
@@ -20,6 +19,27 @@ class ExternalExport(APIView):
             return Response.success({
                 'project': project
             })
+        except Exception as e:
+            Log.error(e)
+            return Response.something_went_wrong()
+
+
+
+class ExternalExportProduct(APIView):
+    permission_classes = [IsExternalAuthenticated]
+
+    def get(self, request):
+        try: 
+            project_id = request.query_params.get('project_id', None)
+            api_id = request.query_params.get('api_id', None)
+
+            if project_id is None:
+                return Response.error('Project id not specified.')
+            if api_id is None:
+                return Response.error('Api id not specified')
+            
+            product = ExternalExportService.get_product(project_id, api_id)
+            return Response.success(product)
         except Exception as e:
             Log.error(e)
             return Response.something_went_wrong()

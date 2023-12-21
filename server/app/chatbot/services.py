@@ -29,10 +29,10 @@ class ChatbotService:
             'greeting': chatbot.greeting,
             'engine': chatbot.engine,
             'model': chatbot.model,
-            'sysPrompt': chatbot.sys_prompt,
+            'sysprompt': chatbot.sys_prompt,
             'knowledge': chatbot.knowledge,
             'config': chatbot.config,
             'data': chatbot.data,
-            'update_on': chatbot.updated_on,
-            'created_on': chatbot.created_on
+            'updateon': chatbot.updated_on,
+            'createdon': chatbot.created_on
         }
