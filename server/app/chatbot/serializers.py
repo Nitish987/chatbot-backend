@@ -3,6 +3,7 @@ from .models import Chatbot
 from common.utils import validators
 from common.debug.log import Log
 from ..apis.models import Api
+from ..emforms.models import Emform
 from common.platform.products import Product
 
 
@@ -13,7 +14,7 @@ class AddChatbotConfigSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chatbot
-        fields = ['api_id', 'name', 'photo', 'greeting', 'engine', 'model',  'sys_prompt', 'knowledge', 'config', 'data']
+        fields = ['api_id', 'name', 'photo', 'greeting', 'engine', 'model',  'sys_prompt', 'knowledge', 'use_emform', 'when_emform', 'emform_config_id', 'config', 'data']
     
     def validate(self, attrs):
         api_id = attrs.get('api_id')
@@ -24,6 +25,9 @@ class AddChatbotConfigSerializer(serializers.ModelSerializer):
         model = attrs.get('model')
         sys_prompt = attrs.get('sys_prompt')
         knowledge = attrs.get('knowledge')
+        use_emform = attrs.get('use_emform')
+        when_emform = attrs.get('when_emform')
+        emform_config_id = attrs.get('emform_config_id')
         config = attrs.get('config')
         data = attrs.get('data')
         user = self.context.get('user')
@@ -56,6 +60,15 @@ class AddChatbotConfigSerializer(serializers.ModelSerializer):
         
             if validators.contains_script(knowledge):
                 raise serializers.ValidationError({'greeting': 'Knowledge must specified.'})
+
+        if use_emform is None or not isinstance(use_emform, bool):
+            raise serializers.ValidationError({'emfrom': 'Invalid emform specification.'})
+        
+        if when_emform is None:
+            raise serializers.ValidationError({'emform': 'Invalid emform specification.'})
+        
+        if use_emform and not Emform.objects.filter(pk=emform_config_id).exists():
+            raise serializers.ValidationError({'api': 'No Emform found.'})
 
         if config is None or not isinstance(config, dict):
             raise serializers.ValidationError({'config': 'Invalid configuration.'})

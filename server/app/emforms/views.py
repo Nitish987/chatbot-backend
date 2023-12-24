@@ -35,8 +35,7 @@ class EmformConfig(APIView):
     def get(self, request):
         try:
             config = EmformService.get_configuration(
-                api_id=request.query_params.get('api_id'),
-                emform_id=request.query_params.get('emform_id')
+                api_id=request.query_params.get('api_id')
             )
 
             # success response

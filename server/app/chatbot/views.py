@@ -35,8 +35,7 @@ class ChatbotConfig(APIView):
     def get(self, request):
         try:
             config = ChatbotService.get_configuration(
-                api_id=request.query_params.get('api_id'),
-                chatbot_id=request.query_params.get('chatbot_id')
+                api_id=request.query_params.get('api_id')
             )
 
             # success response

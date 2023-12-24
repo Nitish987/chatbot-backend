@@ -5,4 +5,4 @@ from . import models
 class ChatbotAdmin(admin.ModelAdmin):
     list_display = ('id', 'api', 'name', 'engine', 'model', 'created_on')
 
-admin.site.register(models.Chatbot)
+admin.site.register(models.Chatbot, ChatbotAdmin)
