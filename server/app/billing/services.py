@@ -1,6 +1,7 @@
 from ..project.models import Project
 from ..apis.models import Api
 from common.platform.products import Product
+from common.debug.log import Log
 
 
 
@@ -14,9 +15,11 @@ class BillingService:
             api.hits_count = api.hits_count + 1
             api.save()
         apis = Api.objects.filter(project=project)
+        api_price = 0
         for a in apis:
             price = Product.chatbot.price if a.product == Product.chatbot.name else Product.emforms.price
-            project.price_to_pay = project.price_to_pay + (a.hits_count * price)
+            api_price = api_price + (a.hits_count * price)
+        project.price_to_pay = round(api_price, 2)
         project.save()
         return project.price_to_pay
     

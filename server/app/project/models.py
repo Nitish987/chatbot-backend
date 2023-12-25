@@ -11,7 +11,7 @@ def _next_pricing_date():
 
 # Project Model
 class Project(models.Model):
-    id = models.CharField(default=generator.generate_identity, max_length=10, primary_key=True, unique=True)
+    id = models.CharField(default=generator.generate_identity, max_length=36, primary_key=True, unique=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(default='', max_length=50)
     description = models.CharField(default='', max_length=200)

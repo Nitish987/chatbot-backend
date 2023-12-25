@@ -1,7 +1,71 @@
 {% include "../../base/header.html" %} {% include "../../base/navbar.html" %}
 
-<div class="container">
-    Docs
+<div class="container mt-3">
+    <h3>Chatbot Docs</h3>
+
+    <p>Steps to integrate chatbot in your website.</p>
+
+    <ul>
+        <li>
+            <p>First create a account and login to conceptune console.</p>
+        </li>
+        <li>
+            <p>Create a project and select the project from the sidebar or dashboard which you have created.</p>
+        </li>
+        <li>
+            <p>In Api section of your project create and design emform only if you want to use emform in chatbot otherwise just create chatbot.</p>
+        </li>
+        <li>
+            <p>Now config emform only if you have created it. Also config chatbot with all the details given.  Make sure if use emform you must check the checkbox that you are using emform in your chatbot while creating chatbot Api.</p>
+        </li>
+        <li>
+            <p>After creating Apis click on view option of chatbot api to get YOUR_PROJECT_ID, YOUR_CHATBOT_API_ID and YOUR_CHATBOT_API_KEY.</p>
+        </li>
+        <li>
+            <p>Add style sheet in your project HTML file.</p>
+            <textarea class="rounded" style="width: 100%; height: 200px; padding: 10px; resize: none; overflow: hidden;" disabled>
+                <head>
+                    ...
+                    ...
+                    <link rel="stylesheet" href="http://127.0.0.1:8800/static/chatbot.css">
+                    ...
+                    ...
+                </head>
+            </textarea>
+        </li>
+        <li>
+            <p>Copy and paste this HTML code in your webpage and change the value of projectId, apiId and apiKey which are provided from conceptune console > project > api > chatbot > view</p>
+            <textarea class="rounded" style="width: 100%; height: 600px; padding: 10px; resize: none; overflow: hidden;" disabled>
+                ...
+                ...
+                <button id="chatbotActiveBtn">
+                    <img src="http://127.0.0.1:8800/static/bot_icon.png" alt="bot-active">
+                </button>
+                <div id="conceptuneChatbot" class="chatbot" 
+                    projectId="YOUR_PROJECT_ID" 
+                    apiId="YOUR_CHATBOT_API_ID" 
+                    apiKey="YOUR_CHATBOT_API_KEY">
+                    <div class="profile">
+                        <img src="http://127.0.0.1:8800/static/bot_icon.png" alt="profile-pic">
+                        <h4 id="chatbot-name">Chatbot</h4>
+                        <img id="chatbotCloseBtn" src="http://127.0.0.1:8800/static/close_btn.svg" alt="close-button">
+                    </div>
+                    <div id="chatbox-holder" class="chats"></div>
+                    <div class="message-box">
+                        <input id="message-content" type="text" placeholder="your message...">
+                        <button id="send-message">Send</button>
+                    </div>
+                </div>
+                <script src="http://127.0.0.1:8800/static/common.js"></script>
+                <script src="http://127.0.0.1:8800/static/chatbot.js"></script>
+                ...
+                ...
+            </textarea>
+        </li>
+        <li>
+            <p>Reload your website and it's all Done. Your chatbot is integrated in few clicks.</p>
+        </li>
+    </ul>
 </div>
 
 {% include "../../base/footer.html" %}
