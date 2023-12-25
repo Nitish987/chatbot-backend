@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'app.chatbot',
     'app.emforms',
     'app.external',
+    'app.billing',
 ]
 
 MIDDLEWARE = [

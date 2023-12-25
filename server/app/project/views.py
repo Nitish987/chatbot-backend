@@ -17,13 +17,18 @@ class UserProject(APIView):
         try:
             serializer = serializers.ProjectSerializer(data=request.data)
             if serializer.is_valid():
-                project = ProjectService.create_project(request.user, serializer.validated_data)
+                if ProjectService.can_create_project(request.user):
+                    project = ProjectService.create_project(request.user, serializer.validated_data)
 
-                # success response
-                return Response.success({
-                    'message': 'Project created successfully.', 
-                    'project': project
-                })
+                    # success response
+                    return Response.success({
+                        'message': 'Project created successfully.', 
+                        'project': project
+                    })
+                
+                else:
+                    # success response
+                    return Response.error('Project limit exceeded.')
 
             # error response
             return Response.errors(serializer.errors)

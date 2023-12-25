@@ -1,6 +1,7 @@
 class _Chatbot:
     def __init__(self) -> None:
         self.__name = 'CHATBOT'
+        self.__price = 0.15
         self.__types = ('QNA', 'AI')
         self.__types_desc = {
             'QNA': 'Questions & Answers',
@@ -32,6 +33,10 @@ class _Chatbot:
     @property
     def models(self) -> dict:
         return self.__models
+    
+    @property
+    def price(self) -> float:
+        return self.__price
     
     @property
     def models_list(self) -> tuple:
@@ -66,6 +71,7 @@ class _Chatbot:
 class _Emforms:
     def __init__(self) -> None:
         self.__name = 'EMFORMS'
+        self.__price = 1
         self.__types = ('JSON', 'MULTIPART')
         self.__types_desc = {
             'JSON': 'Json Body',
@@ -83,6 +89,10 @@ class _Emforms:
     @property
     def types_desc(self) -> dict:
         return self.__types_desc
+    
+    @property
+    def price(self) -> float:
+        return self.__price
     
     @property
     def types_model_choices(self) -> tuple:

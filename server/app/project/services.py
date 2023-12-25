@@ -1,4 +1,4 @@
-from .models import Project
+from .models import Project, _next_pricing_date
 from ..account.services import ProfileService
 from common.debug.log import Log
 
@@ -9,6 +9,10 @@ class ProjectService:
     '''Project crud service'''
 
     @staticmethod
+    def can_create_project(user):
+        return Project.objects.filter(user=user).count() < 3
+
+    @staticmethod
     def create_project(user, data: dict):
         hosts_list = str(data.get('host')).split(',')
         project = Project.objects.create(
@@ -16,7 +20,8 @@ class ProjectService:
             name=data.get('name'),
             description=data.get('description'),
             envtype=data.get('envtype'),
-            host={'urls': hosts_list}
+            host={'urls': hosts_list},
+            next_pricing_date=_next_pricing_date()
         )
         return ProjectService.to_json(project)
     
@@ -50,6 +55,7 @@ class ProjectService:
             'description': project.description,
             'envtype': project.envtype,
             'host': project.host,
+            'nextPricingDate': project.next_pricing_date,
             'updatedon': project.updated_on,
             'createdon': project.created_on
         }

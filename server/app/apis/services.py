@@ -62,6 +62,7 @@ class ApiService:
             'product': project_api.product,
             'type': project_api.type,
             'apikey': api_key,
+            'hitsCount': project_api.hits_count,
             'updatedon': project_api.updated_on,
             'createdon': project_api.created_on
         }
