@@ -15,7 +15,7 @@ class Chatbot(models.Model):
     knowledge = models.TextField(default='')
     use_emform = models.BooleanField(default=False)
     when_emform = models.CharField(default='', max_length=200)
-    emform_config_id = models.IntegerField(default=0)
+    emform = models.ForeignKey("emforms.Emform", null=True, on_delete=models.SET_NULL)
     config = models.JSONField(default=dict)
     data = models.JSONField(default=dict)
     updated_on = models.DateTimeField(auto_now=True)

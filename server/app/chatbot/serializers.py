@@ -11,6 +11,7 @@ from common.platform.products import Product
 # Add Chatbot Configuration Serializer
 class AddChatbotConfigSerializer(serializers.ModelSerializer):
     api_id = serializers.IntegerField()
+    emform_config_id = serializers.IntegerField()
 
     class Meta:
         model = Chatbot

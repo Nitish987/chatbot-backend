@@ -14,7 +14,7 @@ class ChatbotConfig(APIView):
     throttle_classes = [AuthenticatedUserThrottling]
 
     def post(self, request):
-        try:
+        # try:
             Log.info(request.data)
             serializer = serializers.AddChatbotConfigSerializer(data=request.data, context={'user': request.user})
             if serializer.is_valid():
@@ -28,9 +28,9 @@ class ChatbotConfig(APIView):
 
             # error response
             return Response.errors(serializer.errors)
-        except Exception as e:
-            Log.error(e)
-            return Response.something_went_wrong()
+        # except Exception as e:
+        #     Log.error(e)
+        #     return Response.something_went_wrong()
     
     def get(self, request):
         try:

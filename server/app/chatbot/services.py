@@ -1,6 +1,8 @@
 from .models import Chatbot
 from ..apis.models import Api
 from ..apis.services import ApiService
+from ..emforms.models import Emform
+from ..emforms.services import EmformService
 from common.platform.products import Product
 from common.debug.log import Log
 
@@ -10,7 +12,12 @@ class ChatbotService:
     @staticmethod
     def configure(data):
         api = Api.objects.get(id=data.get('api_id'))
-        chatbot = Chatbot.objects.create(api=api, type=api.type, **data)
+        if data.get('use_emform'):
+            emform = Emform.objects.get(pk=data.get('emform_config_id'))
+        else:
+            emform = None
+        del data['emform_config_id']
+        chatbot = Chatbot.objects.create(api=api, type=api.type, emform=emform, **data)
         api.config_id = chatbot.pk
         api.save()
         return ChatbotService.to_json(chatbot)
@@ -35,7 +42,7 @@ class ChatbotService:
             'knowledge': chatbot.knowledge,
             'useEmform': chatbot.use_emform,
             'whenEmform': chatbot.when_emform,
-            'emformConfigId': chatbot.emform_config_id,
+            'emform': EmformService.to_json(chatbot.emform) if chatbot.use_emform else None,
             'config': chatbot.config,
             'data': chatbot.data,
             'updateon': chatbot.updated_on,
