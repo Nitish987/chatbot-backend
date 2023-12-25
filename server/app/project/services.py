@@ -55,6 +55,7 @@ class ProjectService:
             'description': project.description,
             'envtype': project.envtype,
             'host': project.host,
+            'priceToPay': project.price_to_pay,
             'nextPricingDate': project.next_pricing_date,
             'updatedon': project.updated_on,
             'createdon': project.created_on

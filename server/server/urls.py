@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/chatbot/', include('app.chatbot.urls')),
     path('api/emforms/', include('app.emforms.urls')),
     path('api/external/', include('app.external.urls')),
+    path('api/billing/', include('app.billing.urls')),
 ]
 
 if settings.DEBUG:
