@@ -4,7 +4,7 @@ from common.debug.log import Log
 from common.utils.response import Response
 from common.auth.throttling import AuthenticatedUserThrottling
 from . import serializers
-from .services import EmformService
+from .services import EmformService, EmformContentService
 
 
 
@@ -42,6 +42,23 @@ class EmformConfig(APIView):
             return Response.success({
                 'message': 'Emform Configured.', 
                 'config': config
+            })
+        except Exception as e:
+            Log.error(e)
+            return Response.something_went_wrong()
+
+
+
+# Emform Content
+class EmformContent(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [AuthenticatedUserThrottling]
+
+    def get(self, request, emform_id):
+        try:
+            content = EmformContentService.get_content(emform_id)
+            return Response.success({
+                'content': content
             })
         except Exception as e:
             Log.error(e)

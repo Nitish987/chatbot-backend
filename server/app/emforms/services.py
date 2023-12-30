@@ -2,6 +2,7 @@ from .models import Emform
 from ..apis.models import Api
 from ..apis.services import ApiService
 from common.debug.log import Log
+from firebase_admin import firestore
 
 
 class EmformService:
@@ -29,3 +30,21 @@ class EmformService:
             'updateon': emform.updated_on,
             'createdon': emform.created_on
         } 
+
+
+# Emform content generation service
+class EmformContentService:
+    @staticmethod
+    def get_content(emform_id):
+        content = {
+            'keys': [],
+            'data': []
+        }
+        collection = f'emform_{emform_id}'
+        db = firestore.client()
+        docs = db.collection(collection).get()
+        for doc in docs:
+            content['data'].append(doc.to_dict())
+        if len(content['data']) > 0:
+            content['keys'] = content['data'][0].keys()
+        return content
